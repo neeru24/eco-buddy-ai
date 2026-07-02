@@ -2,3 +2,5 @@ streamlit==1.30.0
 pandas
 matplotlib
 altair==4.2.2
+plotly
+reportlab

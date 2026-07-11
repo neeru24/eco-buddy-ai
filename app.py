@@ -8,7 +8,9 @@ import plotly.express as px
 import tempfile
 import uuid
 import os
+from dotenv import load_dotenv
 
+load_dotenv()
 from reportlab.platypus import SimpleDocTemplate, Paragraph
 from reportlab.lib.styles import getSampleStyleSheet
 
@@ -17,6 +19,7 @@ import gamification as gf
 from emissions import calculate_footprint, calculate_eco_score
 
 from recommendations import generate_recommendations
+from ocr_utils import extract_text_from_file, parse_energy_consumption
 
 # Added for Route Planning & Offsets
 from database import (
@@ -43,6 +46,9 @@ def h(text):
 init_db()
 init_gamification_db()
 init_marketplace_db()
+
+if 'extracted_kwh' not in st.session_state:
+    st.session_state.extracted_kwh = 200.0
 
 
 # -------------------------
@@ -471,6 +477,7 @@ st.markdown("""
 
 
     .stButton > button:hover,
+    .stDownloadButton > button:hover,
     [data-testid="stFormSubmitButton"] > button:hover {
         background: linear-gradient(135deg, #111827, #0f2a1a) !important;
         border-color: rgba(134, 239, 172, 0.55) !important;
@@ -668,7 +675,7 @@ st.markdown("<div class='subtitle'>Your Personal AI-Powered Carbon Footprint Tra
 st.markdown("""
 <div style='text-align: center; margin-bottom: 32px;'>
     <div style='display: inline-flex; gap: 16px; padding: 12px 24px; background: rgba(34, 197, 94, 0.08); border-radius: 50px; border: 1px solid rgba(74, 222, 128, 0.2);'>
-        <span style='color: #d1d5db; font-size: 13px; font-weight: 600;'>✨ Track • 📊 Analyze • 💡 Improve</span>
+        <span style='color: #000; font-size: 15px; font-weight: 700;'>✨ Track • 📊 Analyze • 💡 Improve</span>
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -850,7 +857,13 @@ with tab1:
     diet = st.session_state.get("diet", DEFAULT_VALUES["diet"])
     flights = int(st.session_state.get("flights", DEFAULT_VALUES["flights"]))
 
-    # -------------------------
+        st.markdown("### 💡 AI Insight")
+        st.info(data["insight"])
+
+        st.markdown("### 🌱 Recommendations")
+
+        for rec in data["recommendations"]:
+            st.success(rec)    
     # PDF REPORT GENERATION
     # -------------------------
     def generate_pdf(total, eco_score, insight):
@@ -889,7 +902,7 @@ with tab1:
 
         with st.spinner("🌍 Analyzing your carbon footprint..."):
             total, contributors = calculate_footprint(
-                transport, distance, electricity, diet, flights
+                transport, distance, electricity, diet, flights, region
             )
 
         eco_score = calculate_eco_score(total)
@@ -906,10 +919,6 @@ with tab1:
 
         st.markdown("---")
 
-        # -------------------------
-        # RESULTS DASHBOARD
-        # -------------------------
-        st.markdown("<div class='section-header'>📊 Your Carbon Footprint Analysis</div>", unsafe_allow_html=True)
 
         # Top metrics row
         met1, met2, met3, met4 = st.columns(4)

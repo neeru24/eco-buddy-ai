@@ -40,6 +40,14 @@ venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
+4. Set up Environment Variables (for live API integration)
+
+Copy the `.env.example` template to create your own `.env` file:
+```bash
+cp .env.example .env
+```
+Open `.env` and replace `your_api_key_here` with your actual Carbon API key (e.g., from Climatiq). If no key is provided, the app will gracefully fall back to using static, offline emission factors.
+
 ## Run the app
 
 ```bash

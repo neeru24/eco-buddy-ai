@@ -1,7 +1,11 @@
-streamlit==1.30.0
+streamlit
 pandas
 matplotlib
 altair==4.2.2
 plotly
 reportlab
 Pillow
+requests
+python-dotenv
+pytesseract
+pdfplumber

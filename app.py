@@ -301,11 +301,8 @@ st.markdown("""
     }
 
     .stButton > button,
- fix/download-report-button-visibility
-    .stDownloadButton > button {
-
+    .stDownloadButton > button,
     [data-testid="stFormSubmitButton"] > button {
- main
         min-height: 52px;
         padding: 0 28px !important;
         border: none !important;
@@ -320,11 +317,8 @@ st.markdown("""
     }
 
     .stButton > button:hover,
- fix/download-report-button-visibility
-    .stDownloadButton > button:hover {
-
+    .stDownloadButton > button:hover,
     [data-testid="stFormSubmitButton"] > button:hover {
- main
         transform: translateY(-2px);
         background: #101713 !important;
         box-shadow: 0 22px 44px rgba(0, 0, 0, 0.26) !important;
@@ -464,17 +458,13 @@ st.markdown("""
     }
 
     .stButton > button,
- fix/download-report-button-visibility
-    .stDownloadButton > button {
-
+    .stDownloadButton > button,
     [data-testid="stFormSubmitButton"] > button {
-main
         background: linear-gradient(135deg, #0b0f18, #111827) !important;
         color: #ffffff !important;
         border: 1px solid rgba(134, 239, 172, 0.28) !important;
         box-shadow: 0 18px 40px rgba(0, 0, 0, 0.32) !important;
     }
- fix/download-report-button-visibility
             
     .stButton > button:hover,
     .stDownloadButton > button:hover {
@@ -482,7 +472,6 @@ main
 
     .stButton > button:hover,
     [data-testid="stFormSubmitButton"] > button:hover {
- main
         background: linear-gradient(135deg, #111827, #0f2a1a) !important;
         border-color: rgba(134, 239, 172, 0.55) !important;
     }
@@ -688,217 +677,213 @@ st.markdown("---")
 
 
 # -------------------------
-# INPUTS SECTION
+# MAIN APPLICATION TABS
 # -------------------------
-
- feature/reset-assessment-button
-col1, col2, col3 = st.columns(3)
-
-with col1:
-    st.markdown("""
-    <div style='display: flex; align-items: center; gap: 8px; margin-bottom: 16px;'>
-        <span style='font-size: 24px;'>🚗</span>
-        <span style='font-size: 18px; font-weight: 700; color: #e5e7eb;'>Transportation</span>
-    </div>
-    """, unsafe_allow_html=True)
-    transport = st.selectbox(
-        "Primary Transport",
-        ["Car", "Public Transport", "Bike", "Walking"],
-        key="transport"
-    )
-    distance = st.number_input(
-        "Daily Distance (km)",
-        min_value=0.0,
-        value=10.0,
-        step=1.0,
-        key="distance"
-    )
-
-with col2:
-    st.markdown("""
-    <div style='display: flex; align-items: center; gap: 8px; margin-bottom: 16px;'>
-        <span style='font-size: 24px;'>⚡</span>
-        <span style='font-size: 18px; font-weight: 700; color: #e5e7eb;'>Energy & Diet</span>
-    </div>
-    """, unsafe_allow_html=True)
-    electricity = st.number_input(
-        "Monthly Electricity (kWh)",
-        min_value=0.0,
-        value=200.0,
-        step=10.0,
-        key="electricity"
-    )
-    diet = st.selectbox(
-        "Diet Type",
-        ["Vegetarian", "Non-Vegetarian"],
-        key="diet"
-    )
-with col3:
-    st.markdown("""
-    <div style='display: flex; align-items: center; gap: 8px; margin-bottom: 16px;'>
-        <span style='font-size: 24px;'>✈️</span>
-        <span style='font-size: 18px; font-weight: 700; color: #e5e7eb;'>Travel</span>
-    </div>
-    """, unsafe_allow_html=True)
-    flights = st.number_input(
-        "Annual Flights",
-        min_value=0,
-        value=0,
-        step=1,
-        key="flights"
-    )
-    st.info("💡 How many long-distance flights per year?")
-
-
-# -------------------------
-# PDF REPORT GENERATION
-
- main
-# -------------------------
-# TABS CONFIGURATION
-# -------------------------
- feature/input-validation-and-error-handling
-col_btn1, col_btn2, col_btn3 = st.columns([1, 1.5, 1])
-
-with col_btn1:
-    reset_btn = st.button(
-        "🔄 Reset Assessment",
-        use_container_width=True
-    )
-
-with col_btn2:
- feature/reset-assessment-button
-    analyze_btn = st.button(
-        "🌿 Analyze My Impact",
-        use_container_width=True
-    )
-
-
-if reset_btn:
-
-    for key in DEFAULT_VALUES:
-        if key in st.session_state:
-            del st.session_state[key]
-
-    st.success("✅ Assessment form has been reset.")
-    st.rerun()
-
-    st.caption("✔ All input fields are validated before analysis.")
-    analyze_btn = st.button("🌿 Analyze My Impact", use_container_width=True)
- main
-
-tab1, tab2, tab3, tab4 = st.tabs(["🌍 Carbon Footprint", "⚡ Home Energy Audit", "🎮 Gamification", "🗺️ Route Planning & Offsets"])
- main
+tab1, tab2, tab3, tab4 = st.tabs([
+    "🌍 Carbon Footprint",
+    "⚡ Home Energy Audit",
+    "🎮 Gamification",
+    "🗺️ Route Planning & Offsets",
+])
 
 with tab1:
-    st.markdown("<div class='section-header'>📝 Your Lifestyle Profile</div>", unsafe_allow_html=True)
+    st.markdown(
+        "<div class='section-header'>📝 Carbon Footprint Assessment</div>",
+        unsafe_allow_html=True,
+    )
 
- feature/input-validation-and-error-handling
-    with st.spinner("🌍 Analyzing your carbon footprint..."):
+    # The assessment is split into three sections so users can clearly see
+    # their current step and overall completion percentage.
+    TOTAL_ASSESSMENT_STEPS = 3
 
-        progress_text = st.empty()
-        progress = st.progress(0)
+    if "assessment_step" not in st.session_state:
+        st.session_state.assessment_step = 1
 
-        progress_text.info("🔍 Validating user inputs...")
-        progress.progress(20)
-        time.sleep(0.5)  # Simulate validation delay
+    current_step = max(
+        1,
+        min(TOTAL_ASSESSMENT_STEPS, int(st.session_state.assessment_step)),
+    )
+    progress_percentage = round(
+        (current_step / TOTAL_ASSESSMENT_STEPS) * 100
+    )
 
-        progress_text.info("🌍 Calculating carbon footprint...")
-        progress.progress(40)
+    st.markdown(
+        f"""
+        <div class="card-highlight" style="margin-bottom: 24px;">
+            <div style="display:flex; justify-content:space-between;
+                        align-items:center; gap:16px; margin-bottom:10px;">
+                <span style="font-size:15px; font-weight:800; color:#ffffff;">
+                    Step {current_step} of {TOTAL_ASSESSMENT_STEPS}
+                </span>
+                <span style="font-size:15px; font-weight:800; color:#86efac;">
+                    {progress_percentage}%
+                </span>
+            </div>
+            <div class="progress-bar" role="progressbar"
+                 aria-valuenow="{progress_percentage}"
+                 aria-valuemin="0" aria-valuemax="100"
+                 aria-label="Carbon footprint assessment progress">
+                <div class="progress-fill"
+                     style="width:{progress_percentage}%;"></div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
-        total, contributors = calculate_footprint(
-            transport, distance, electricity, diet, flights
+    analyze_btn = False
+
+    if current_step == 1:
+        st.markdown("### 🚗 Step 1: Transportation")
+        transport = st.selectbox(
+            "Primary Transport",
+            ["Car", "Public Transport", "Bike", "Walking"],
+            key="transport",
+        )
+        distance = st.number_input(
+            "Daily Distance (km)",
+            min_value=0.0,
+            step=1.0,
+            key="distance",
+        )
+        st.caption("Enter the transport mode you use most often and your average daily distance.")
+
+    elif current_step == 2:
+        st.markdown("### ⚡ Step 2: Home Energy & Diet")
+        electricity = st.number_input(
+            "Monthly Electricity (kWh)",
+            min_value=0.0,
+            step=10.0,
+            key="electricity",
+        )
+        diet = st.selectbox(
+            "Diet Type",
+            ["Vegetarian", "Non-Vegetarian"],
+            key="diet",
+        )
+        st.caption("Add your average monthly electricity usage and usual diet type.")
+
+    else:
+        st.markdown("### ✈️ Step 3: Air Travel")
+        flights = st.number_input(
+            "Annual Flights",
+            min_value=0,
+            step=1,
+            key="flights",
+        )
+        st.info("💡 Enter the number of long-distance flights you take in one year.")
+
+        st.markdown("#### Assessment summary")
+        summary_col1, summary_col2, summary_col3 = st.columns(3)
+        summary_col1.metric(
+            "Transport",
+            st.session_state.get("transport", DEFAULT_VALUES["transport"]),
+        )
+        summary_col2.metric(
+            "Daily distance",
+            f'{st.session_state.get("distance", DEFAULT_VALUES["distance"]):.1f} km',
+        )
+        summary_col3.metric(
+            "Electricity",
+            f'{st.session_state.get("electricity", DEFAULT_VALUES["electricity"]):.0f} kWh',
         )
 
-        progress_text.info("📊 Calculation completed...")
-        progress.progress(100)
+    navigation_left, navigation_middle, navigation_right = st.columns([1, 1.5, 1])
 
-        progress.empty()
-        progress_text.empty()
+    with navigation_left:
+        previous_clicked = st.button(
+            "← Previous",
+            disabled=current_step == 1,
+            use_container_width=True,
+            key="assessment_previous",
+        )
 
-    eco_score = calculate_eco_score(total)
+    with navigation_middle:
+        if current_step < TOTAL_ASSESSMENT_STEPS:
+            next_clicked = st.button(
+                "Next →",
+                use_container_width=True,
+                key="assessment_next",
+            )
+        else:
+            next_clicked = False
+            analyze_btn = st.button(
+                "🌿 Analyze My Impact",
+                use_container_width=True,
+                key="assessment_analyze",
+            )
 
-    insight, recommendations = generate_recommendations(
-        transport, electricity, diet, flights, contributors
+    with navigation_right:
+        reset_btn = st.button(
+            "🔄 Reset",
+            use_container_width=True,
+            key="assessment_reset",
+        )
+
+    if previous_clicked:
+        st.session_state.assessment_step = max(1, current_step - 1)
+        st.rerun()
+
+    if next_clicked:
+        st.session_state.assessment_step = min(
+            TOTAL_ASSESSMENT_STEPS,
+            current_step + 1,
+        )
+        st.rerun()
+
+    if reset_btn:
+        for key, value in DEFAULT_VALUES.items():
+            st.session_state[key] = value
+        st.session_state.assessment_step = 1
+        st.success("✅ Assessment form has been reset.")
+        st.rerun()
+
+    # Read all values from session state because only one wizard step is
+    # displayed at a time.
+    transport = st.session_state.get("transport", DEFAULT_VALUES["transport"])
+    distance = float(
+        st.session_state.get("distance", DEFAULT_VALUES["distance"])
     )
-
-    save_assessment(
-        transport, distance, electricity, diet, flights, total, eco_score
+    electricity = float(
+        st.session_state.get("electricity", DEFAULT_VALUES["electricity"])
     )
-
-    st.success("✅ Analysis completed!")
-
-    st.markdown("---")
-
-    # -------------------------
-    # RESULTS DASHBOARD
-    # -------------------------
-    st.markdown("<div class='section-header'>📊 Your Carbon Footprint Analysis</div>", unsafe_allow_html=True)
-
-    col1, col2, col3 = st.columns(3)
- main
-
-    with col1:
-        st.markdown("""
-        <div style='display: flex; align-items: center; gap: 8px; margin-bottom: 16px;'>
-            <span style='font-size: 24px;'>🚗</span>
-            <span style='font-size: 18px; font-weight: 700; color: #e5e7eb;'>Transportation</span>
-        </div>
-        """, unsafe_allow_html=True)
-        transport = st.selectbox("Primary Transport", ["Car", "Public Transport", "Bike", "Walking"])
-        distance = st.number_input("Daily Distance (km)", min_value=0.0, value=10.0, step=1.0)
-
-    with col2:
-        st.markdown("""
-        <div style='display: flex; align-items: center; gap: 8px; margin-bottom: 16px;'>
-            <span style='font-size: 24px;'>⚡</span>
-            <span style='font-size: 18px; font-weight: 700; color: #e5e7eb;'>Energy & Diet</span>
-        </div>
-        """, unsafe_allow_html=True)
-        electricity = st.number_input("Monthly Electricity (kWh)", min_value=0.0, value=200.0, step=10.0)
-        diet = st.selectbox("Diet Type", ["Vegetarian", "Non-Vegetarian"])
-
-    with col3:
-        st.markdown("""
-        <div style='display: flex; align-items: center; gap: 8px; margin-bottom: 16px;'>
-            <span style='font-size: 24px;'>✈️</span>
-            <span style='font-size: 18px; font-weight: 700; color: #e5e7eb;'>Travel</span>
-        </div>
-        """, unsafe_allow_html=True)
-        flights = st.number_input("Annual Flights", min_value=0, value=0, step=1)
-        st.info("💡 How many long-distance flights per year?")
-
+    diet = st.session_state.get("diet", DEFAULT_VALUES["diet"])
+    flights = int(st.session_state.get("flights", DEFAULT_VALUES["flights"]))
 
     # -------------------------
     # PDF REPORT GENERATION
     # -------------------------
     def generate_pdf(total, eco_score, insight):
         try:
-            file_name = os.path.join(tempfile.gettempdir(), f"eco_report_{uuid.uuid4().hex}.pdf")
+            file_name = os.path.join(
+                tempfile.gettempdir(),
+                f"eco_report_{uuid.uuid4().hex}.pdf",
+            )
             doc = SimpleDocTemplate(file_name)
             styles = getSampleStyleSheet()
 
             content = [
                 Paragraph("EcoBuddy AI Report", styles["Title"]),
-                Paragraph(f"Carbon Footprint: {total:.2f} kg CO₂", styles["Normal"]),
-                Paragraph(f"Eco Score: {eco_score}/100", styles["Normal"]),
+                Paragraph(
+                    f"Carbon Footprint: {total:.2f} kg CO₂",
+                    styles["Normal"],
+                ),
+                Paragraph(
+                    f"Eco Score: {eco_score}/100",
+                    styles["Normal"],
+                ),
                 Paragraph("Key Insight:", styles["Heading2"]),
-                Paragraph(insight, styles["Normal"])
+                Paragraph(insight, styles["Normal"]),
             ]
 
             doc.build(content)
             return file_name
         except Exception:
-            st.error("Could not generate the PDF report. Please check disk space and permissions, then try again.")
+            st.error(
+                "Could not generate the PDF report. Please check disk "
+                "space and permissions, then try again."
+            )
             return None
-
-
-    # -------------------------
-    # CALCULATE & ANALYZE
-    # -------------------------
-    col_btn1, col_btn2, col_btn3 = st.columns([1, 1.5, 1])
-    with col_btn2:
-        analyze_btn = st.button("🌿 Analyze My Impact", width="stretch")
 
     if analyze_btn:
 

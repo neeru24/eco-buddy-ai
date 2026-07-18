@@ -14,7 +14,8 @@ CHALLENGES = {
     'c2': {'title': 'Avoid non-vegetarian meals for 3 days', 'category': 'Diet', 'target': 3, 'unit': 'days', 'xp': 40},
     'c3': {'title': 'Reduce electricity use', 'category': 'Energy', 'target': 1, 'unit': 'completion', 'xp': 30},
     'c4': {'title': 'Complete a carbon-footprint assessment', 'category': 'General', 'target': 1, 'unit': 'completion', 'xp': 60},
-    'c5': {'title': 'Avoid single-use plastic for 5 days', 'category': 'General', 'target': 5, 'unit': 'days', 'xp': 50}
+    'c5': {'title': 'Avoid single-use plastic for 5 days', 'category': 'General', 'target': 5, 'unit': 'days', 'xp': 50},
+    'c6': {'title': 'Scan and sort 3 waste items', 'category': 'Waste', 'target': 3, 'unit': 'scans', 'xp': 40}
 }
 
 BADGES = {
@@ -23,7 +24,8 @@ BADGES = {
     'b3': {'name': 'Challenge Champion', 'desc': 'Completed 5 weekly challenges', 'xp': 100},
     'b4': {'name': 'Plant-Based Week', 'desc': 'Avoided non-vegetarian meals for 7 days', 'xp': 50},
     'b5': {'name': 'Squad Founder', 'desc': 'Created a new Squad and took the lead', 'xp': 30},
-    'b6': {'name': 'Squad Champion', 'desc': 'Won a multiplayer Monthly Challenge', 'xp': 100}
+    'b6': {'name': 'Squad Champion', 'desc': 'Won a multiplayer Monthly Challenge', 'xp': 100},
+    'b7': {'name': 'Waste Sorting Guru', 'desc': 'Successfully scanned and sorted 3 waste items using the AI Vision scanner', 'xp': 60}
 }
 
 def calculate_level(total_xp):
@@ -110,6 +112,11 @@ def check_badge_eligibility(user_id):
     
     if completed_count >= 5:
         unlock_badge(user_id, 'b3')
+
+    # Unlock b7 if challenge c6 is completed
+    for c in challenges:
+        if c['challenge_id'] == 'c6' and c['status'] == 'completed':
+            unlock_badge(user_id, 'b7')
 
 def unlock_badge(user_id, badge_id):
     if unlock_badge_in_db(user_id, badge_id):

@@ -21,7 +21,9 @@ BADGES = {
     'b1': {'name': 'First Assessment', 'desc': 'Completed your first footprint assessment', 'xp': 20},
     'b2': {'name': '7-Day Streak', 'desc': 'Logged activity for 7 consecutive days', 'xp': 50},
     'b3': {'name': 'Challenge Champion', 'desc': 'Completed 5 weekly challenges', 'xp': 100},
-    'b4': {'name': 'Plant-Based Week', 'desc': 'Avoided non-vegetarian meals for 7 days', 'xp': 50}
+    'b4': {'name': 'Plant-Based Week', 'desc': 'Avoided non-vegetarian meals for 7 days', 'xp': 50},
+    'b5': {'name': 'Squad Founder', 'desc': 'Created a new Squad and took the lead', 'xp': 30},
+    'b6': {'name': 'Squad Champion', 'desc': 'Won a multiplayer Monthly Challenge', 'xp': 100}
 }
 
 def calculate_level(total_xp):
@@ -154,3 +156,40 @@ def generate_achievement_card(user_id, badge_id, filename="badge_card.png"):
     filepath = os.path.join(os.getcwd(), filename)
     img.save(filepath)
     return filepath
+
+
+def evaluate_monthly_challenges():
+    # Import locally to avoid circular dependencies
+    from database import get_active_monthly_challenges, get_squad_leaderboard, get_squad_members, DB_NAME
+    import sqlite3
+
+    active_challenges = get_active_monthly_challenges()
+    results = []
+
+    for challenge in active_challenges:
+        leaderboard = get_squad_leaderboard() # list of squads with total_xp
+        winning_squads = [s for s in leaderboard if s['total_xp'] >= challenge['target_xp']]
+
+        badge_id = challenge['reward_badge_id']
+        for squad in winning_squads:
+            members = get_squad_members(squad['id'])
+            for member in members:
+                uid = member['user_id']
+                unlock_badge(uid, badge_id)
+
+        # Update challenge status to completed in DB
+        try:
+            conn = sqlite3.connect(DB_NAME)
+            cursor = conn.cursor()
+            cursor.execute("UPDATE monthly_challenges SET status = 'completed' WHERE id = ?", (challenge['id'],))
+            conn.commit()
+            conn.close()
+        except sqlite3.Error as e:
+            print(f"Error marking challenge completed: {e}")
+
+        results.append({
+            'challenge_id': challenge['id'],
+            'winning_squads': [s['name'] for s in winning_squads]
+        })
+
+    return results

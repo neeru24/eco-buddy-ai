@@ -24,6 +24,11 @@ def init_db():
 
         conn.commit()
         conn.close()
+        
+        # Initialize and seed squads and multiplayer tables
+        init_squads_db()
+        seed_multiplayer_data()
+        
         return True
     except sqlite3.Error as e:
         print(f"Database init error: {e}")
@@ -669,6 +674,359 @@ def get_water_assessments(user_id):
         return [dict(zip(columns, row)) for row in data]
     except Exception:
         return []
+    finally:
+        if conn:
+            conn.close()
+
+
+def init_squads_db():
+    conn = None
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT UNIQUE NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS squads (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                invite_code TEXT UNIQUE NOT NULL,
+                owner_user_id INTEGER NOT NULL,
+                description TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS squad_memberships (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                squad_id INTEGER NOT NULL,
+                user_id INTEGER NOT NULL,
+                joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(squad_id, user_id)
+            )
+        """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS monthly_challenges (
+                id TEXT PRIMARY KEY,
+                title TEXT NOT NULL,
+                description TEXT,
+                target_xp INTEGER NOT NULL,
+                start_date TIMESTAMP,
+                end_date TIMESTAMP,
+                status TEXT DEFAULT 'active',
+                reward_badge_id TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        conn.commit()
+        return True
+    except sqlite3.Error as e:
+        print(f"Database squads init error: {e}")
+        return False
+    finally:
+        if conn:
+            conn.close()
+
+
+def get_or_create_user(username):
+    conn = None
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
+        row = cursor.fetchone()
+        if row:
+            return row[0]
+        cursor.execute("INSERT INTO users (username) VALUES (?)", (username,))
+        conn.commit()
+        return cursor.lastrowid
+    except sqlite3.Error as e:
+        print(f"get_or_create_user error: {e}")
+        return 1
+    finally:
+        if conn:
+            conn.close()
+
+
+def get_username(user_id):
+    conn = None
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        cursor.execute("SELECT username FROM users WHERE id = ?", (user_id,))
+        row = cursor.fetchone()
+        return row[0] if row else f"User {user_id}"
+    except sqlite3.Error:
+        return f"User {user_id}"
+    finally:
+        if conn:
+            conn.close()
+
+
+def create_squad(name, description, owner_user_id):
+    import uuid
+    invite_code = f"SQ-{str(uuid.uuid4())[:6].upper()}"
+    conn = None
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        
+        # Check if user is already in a squad
+        cursor.execute("SELECT squad_id FROM squad_memberships WHERE user_id = ?", (owner_user_id,))
+        if cursor.fetchone():
+            return None
+            
+        cursor.execute("""
+            INSERT INTO squads (name, description, owner_user_id, invite_code)
+            VALUES (?, ?, ?, ?)
+        """, (name, description, owner_user_id, invite_code))
+        squad_id = cursor.lastrowid
+        
+        cursor.execute("""
+            INSERT INTO squad_memberships (squad_id, user_id)
+            VALUES (?, ?)
+        """, (squad_id, owner_user_id))
+        
+        conn.commit()
+        return invite_code
+    except sqlite3.Error as e:
+        print(f"create_squad error: {e}")
+        return None
+    finally:
+        if conn:
+            conn.close()
+
+
+def join_squad_by_code(user_id, invite_code):
+    conn = None
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        
+        # Check if user is already in a squad
+        cursor.execute("SELECT squad_id FROM squad_memberships WHERE user_id = ?", (user_id,))
+        if cursor.fetchone():
+            return False, "You are already a member of a squad. Leave your current squad first."
+            
+        cursor.execute("SELECT id FROM squads WHERE invite_code = ?", (invite_code,))
+        row = cursor.fetchone()
+        if not row:
+            return False, "Invalid invite code."
+            
+        squad_id = row[0]
+        cursor.execute("""
+            INSERT INTO squad_memberships (squad_id, user_id)
+            VALUES (?, ?)
+        """, (squad_id, user_id))
+        
+        conn.commit()
+        return True, "Successfully joined the squad!"
+    except sqlite3.Error as e:
+        return False, f"Database error: {e}"
+    finally:
+        if conn:
+            conn.close()
+
+
+def leave_squad(user_id):
+    conn = None
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT squad_id FROM squad_memberships WHERE user_id = ?", (user_id,))
+        row = cursor.fetchone()
+        if not row:
+            return False
+            
+        squad_id = row[0]
+        
+        # Check if user is owner
+        cursor.execute("SELECT owner_user_id FROM squads WHERE id = ?", (squad_id,))
+        owner_row = cursor.fetchone()
+        is_owner = owner_row and owner_row[0] == user_id
+        
+        cursor.execute("DELETE FROM squad_memberships WHERE squad_id = ? AND user_id = ?", (squad_id, user_id))
+        
+        if is_owner:
+            # Transfer ownership to another member or delete squad if empty
+            cursor.execute("SELECT user_id FROM squad_memberships WHERE squad_id = ? ORDER BY joined_at ASC LIMIT 1", (squad_id,))
+            next_member_row = cursor.fetchone()
+            if next_member_row:
+                cursor.execute("UPDATE squads SET owner_user_id = ? WHERE id = ?", (next_member_row[0], squad_id))
+            else:
+                cursor.execute("DELETE FROM squads WHERE id = ?", (squad_id,))
+                
+        conn.commit()
+        return True
+    except sqlite3.Error:
+        return False
+    finally:
+        if conn:
+            conn.close()
+
+
+def get_squad_for_user(user_id):
+    conn = None
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT s.id, s.name, s.invite_code, s.owner_user_id, s.description, s.created_at
+            FROM squads s
+            JOIN squad_memberships sm ON s.id = sm.squad_id
+            WHERE sm.user_id = ?
+        """, (user_id,))
+        row = cursor.fetchone()
+        if row:
+            columns = [column[0] for column in cursor.description]
+            return dict(zip(columns, row))
+        return None
+    except sqlite3.Error:
+        return None
+    finally:
+        if conn:
+            conn.close()
+
+
+def get_squad_members(squad_id):
+    conn = None
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT sm.user_id, u.username, sm.joined_at
+            FROM squad_memberships sm
+            JOIN users u ON sm.user_id = u.id
+            WHERE sm.squad_id = ?
+            ORDER BY sm.joined_at ASC
+        """, (squad_id,))
+        columns = [column[0] for column in cursor.description]
+        rows = cursor.fetchall()
+        return [dict(zip(columns, row)) for row in rows]
+    except sqlite3.Error:
+        return []
+    finally:
+        if conn:
+            conn.close()
+
+
+def get_squad_leaderboard():
+    conn = None
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT s.id, s.name, s.description, COALESCE(SUM(xp.xp_amount), 0) as total_xp
+            FROM squads s
+            LEFT JOIN squad_memberships sm ON s.id = sm.squad_id
+            LEFT JOIN xp_transactions xp ON sm.user_id = xp.user_id
+            GROUP BY s.id
+            ORDER BY total_xp DESC
+        """)
+        columns = [column[0] for column in cursor.description]
+        rows = cursor.fetchall()
+        return [dict(zip(columns, row)) for row in rows]
+    except sqlite3.Error:
+        return []
+    finally:
+        if conn:
+            conn.close()
+
+
+def get_active_monthly_challenges():
+    conn = None
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM monthly_challenges WHERE status = 'active'")
+        columns = [column[0] for column in cursor.description]
+        rows = cursor.fetchall()
+        return [dict(zip(columns, row)) for row in rows]
+    except sqlite3.Error:
+        return []
+    finally:
+        if conn:
+            conn.close()
+
+
+def seed_multiplayer_data():
+    import datetime
+    conn = None
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        
+        # Check if users already seeded
+        cursor.execute("SELECT COUNT(*) FROM users")
+        if cursor.fetchone()[0] > 0:
+            return
+            
+        # Seed users
+        users = ["Alice", "Bob", "Charlie", "Dave", "Eve", "The Professor"]
+        user_ids = []
+        for u in users:
+            cursor.execute("INSERT OR IGNORE INTO users (username) VALUES (?)", (u,))
+            cursor.execute("SELECT id FROM users WHERE username = ?", (u,))
+            user_ids.append(cursor.fetchone()[0])
+            
+        # Seed XP transactions for users to show on leaderboard
+        import random
+        sources = [('challenge', 'c1', 50), ('challenge', 'c2', 40), ('badge', 'b1', 20), ('badge', 'b2', 50)]
+        for uid in user_ids:
+            for src_type, src_id, xp in random.sample(sources, k=3):
+                cursor.execute("""
+                    INSERT OR IGNORE INTO xp_transactions (user_id, source_type, source_id, xp_amount, description)
+                    VALUES (?, ?, ?, ?, ?)
+                """, (uid, src_type, src_id, xp, f"Completed {src_id}"))
+
+        # Seed some initial squads
+        cursor.execute("""
+            INSERT OR IGNORE INTO squads (id, name, invite_code, owner_user_id, description)
+            VALUES 
+            (1, 'Eco Warriors', 'WAR123', ?, 'Saving the planet one action at a time!'),
+            (2, 'Green Team', 'GRN456', ?, 'Reducing footprint collectively.')
+        """, (user_ids[0], user_ids[2]))
+        
+        # Seed memberships
+        # Alice (1) is in Eco Warriors (1)
+        cursor.execute("INSERT OR IGNORE INTO squad_memberships (squad_id, user_id) VALUES (1, ?)", (user_ids[0],))
+        # Bob (2) is in Eco Warriors (1)
+        cursor.execute("INSERT OR IGNORE INTO squad_memberships (squad_id, user_id) VALUES (1, ?)", (user_ids[1],))
+        # Charlie (3) is in Green Team (2)
+        cursor.execute("INSERT OR IGNORE INTO squad_memberships (squad_id, user_id) VALUES (2, ?)", (user_ids[2],))
+        # Dave (4) is in Green Team (2)
+        cursor.execute("INSERT OR IGNORE INTO squad_memberships (squad_id, user_id) VALUES (2, ?)", (user_ids[3],))
+        
+        # Seed monthly challenges
+        today = datetime.date.today()
+        start_of_month = datetime.date(today.year, today.month, 1).strftime('%Y-%m-%d')
+        if today.month == 12:
+            end_of_month = datetime.date(today.year + 1, 1, 1) - datetime.timedelta(days=1)
+        else:
+            end_of_month = datetime.date(today.year, today.month + 1, 1) - datetime.timedelta(days=1)
+        end_of_month_str = end_of_month.strftime('%Y-%m-%d')
+        
+        cursor.execute("""
+            INSERT OR REPLACE INTO monthly_challenges (id, title, description, target_xp, start_date, end_date, status, reward_badge_id)
+            VALUES 
+            ('mc1', 'July Carbon Diet', 'Earn a collective 200 XP as a squad to unlock the Challenge Champion badge.', 200, ?, ?, 'active', 'b3'),
+            ('mc2', 'Zero Waste Journey', 'Earn a collective 300 XP as a squad to unlock the Plant-Based Week badge.', 300, ?, ?, 'active', 'b4')
+        """, (start_of_month, end_of_month_str, start_of_month, end_of_month_str))
+
+        conn.commit()
+    except Exception as e:
+        print(f"Error seeding multiplayer data: {e}")
     finally:
         if conn:
             conn.close()

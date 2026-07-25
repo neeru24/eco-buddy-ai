@@ -13,9 +13,13 @@ st.set_page_config(page_title="Location History", page_icon="🗺️", layout="w
 st.title("Location History & Emissions Tracking")
 st.write("Upload your GPX or Google Takeout JSON files to automatically parse trips and calculate your footprint.")
 
+if "location_file" not in st.session_state:
+    st.session_state.location_file = None
+
 uploaded_file = st.file_uploader("Upload Location File (.gpx, .json)", type=["gpx", "json"])
 
 if uploaded_file is not None:
+    st.session_state.location_file = uploaded_file
     waypoints = []
     parse_error = None
 

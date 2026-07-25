@@ -120,21 +120,6 @@ for key, value in DEFAULT_VALUES.items():
     if key not in st.session_state:
         st.session_state[key] = value
 
-# -------------------------
-# DEFAULT FORM VALUES
-# -------------------------
-DEFAULT_VALUES = {
-    "transport": "Car",
-    "distance": 10.0,
-    "electricity": 200.0,
-    "diet": "Vegetarian",
-    "flights": 0,
-}
-
-for key, value in DEFAULT_VALUES.items():
-    if key not in st.session_state:
-        st.session_state[key] = value
-
 st.set_page_config(
     page_title="EcoBuddy",
     page_icon="🌱",

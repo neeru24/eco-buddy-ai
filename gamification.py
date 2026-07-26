@@ -249,7 +249,23 @@ def evaluate_skill_tree(user_id):
         
     return {row['node_id']: row['status'] for row in progress}
 
+def initialize_skill_tree_status(progress_map=None):
+    """Return a complete status map for all skill-tree nodes.
 
+    Existing progress statuses are preserved. Nodes without recorded progress
+    are unlocked when they have no prerequisites and locked otherwise.
+    """
+    status_map = dict(progress_map or {})
+
+    for node_id, node_data in SKILL_TREE_NODES.items():
+        if node_id not in status_map:
+            status_map[node_id] = (
+                "Unlocked"
+                if not node_data.get("prerequisites")
+                else "Locked"
+            )
+
+    return status_map
 def complete_skill_node(user_id, node_id):
     node_data = SKILL_TREE_NODES.get(node_id)
     if not node_data:

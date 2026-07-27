@@ -16,10 +16,11 @@ from marketplace import *
 import energy_audit as ea
 import logging
 from styles.theme import apply_theme
+from notifications import success, error, warning, info
 
 user_id = st.session_state.get('user_id')
 if not user_id:
-    st.warning('Please log in from the main application page.')
+    warning('Please log in from the main application page.')
     st.stop()
 apply_theme()
 
@@ -133,11 +134,11 @@ with route_col:
             st.dataframe(df_comp.style.format({"emissions_kg": "{:.2f}"}))
 
         except Exception as e:
-            st.error(f"Error calculating emissions: {e}")
+            error(f"Error calculating emissions: {e}")
 
 with offset_col:
     st.subheader("🛒 Simulated Offset Marketplace")
-    st.info("💡 Invest your simulated eco-points to offset carbon.")
+    info("💡 Invest your simulated eco-points to offset carbon.")
 
     projects = get_offset_projects()
 
@@ -201,11 +202,11 @@ selected_proj = project_lookup[selected_proj_name]
 
                 # Defaulting to user_id=1 for now as per instructions
                 if save_offset_transaction(user_id, selected_proj["id"], selected_proj["name"], tonnes, selected_proj["cost_per_tonne"], cost):
-                    st.success(f"Simulated purchase successful! Offset {tonnes}t for ${cost:.2f}.")
+                    success(f"Simulated purchase successful! Offset {tonnes}t for ${cost:.2f}.")
                 else:
-                    st.error("Failed to save transaction.")
+                    error("Failed to save transaction.")
             else:
-                st.error(msg)
+                error(msg)
 
 
             # Defaulting to user_id=1 for now as per instructions
@@ -217,13 +218,13 @@ selected_proj = project_lookup[selected_proj_name]
                 selected_proj["cost_per_tonne"],
                 cost,
             ):
-                st.success(
+success(
                     f"Simulated purchase successful! Offset {tonnes}t for ${cost:.2f}."
                 )
             else:
-                st.error("Failed to save transaction.")
+                error("Failed to save transaction.")
         else:
-            st.error(msg)
+            error(msg)
 st.markdown("---")
 
 st.markdown(
@@ -289,7 +290,7 @@ st.progress(net_progress / 100)
         st.progress(net_progress / 100)
     except Exception:
         logger.exception("Failed to load portfolio metrics.")
-        st.error("Unable to load your portfolio summary. Please try again later.")
+        error("Unable to load your portfolio summary. Please try again later.")
 
     st.markdown("</div>", unsafe_allow_html=True)
 
@@ -332,7 +333,7 @@ with port_col2:
         for transaction in transactions:
             delete_offset_transaction(transaction["id"])
 
-        st.success("Portfolio history cleared successfully.")
+        success("Portfolio history cleared successfully.")
         st.rerun()
 
             for t in transactions:
@@ -341,7 +342,7 @@ with port_col2:
 
 
     else:
-        st.info(
+        info(
             "No transactions yet. Visit the marketplace to start your portfolio!"
         )
 
@@ -349,14 +350,14 @@ with port_col2:
                 try:
                     for transaction in transactions:
                         delete_offset_transaction(transaction["id"])
-                    st.success("Transaction history cleared successfully.")
+                    success("Transaction history cleared successfully.")
                     st.rerun()
                 except Exception:
                     logger.exception("Failed to clear transaction history.")
-                    st.error("Unable to clear transaction history. Please try again.")
+                    error("Unable to clear transaction history. Please try again.")
         else:
-            st.info("No transactions yet. Visit the marketplace to start your portfolio!")
+            info("No transactions yet. Visit the marketplace to start your portfolio!")
     except Exception:
         logger.exception("Failed to load transaction history.")
-        st.error("Unable to load your transaction history. Please try again later.")
+        error("Unable to load your transaction history. Please try again later.")
 

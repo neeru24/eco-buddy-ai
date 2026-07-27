@@ -5,12 +5,13 @@ import plotly.express as px
 from water import calculate_water_footprint, validate_water_inputs, GLOBAL_WATER_AVERAGE_LITERS
 from recommendations import generate_water_recommendations
 from database import save_water_assessment, get_water_assessments
+from notifications import success, error, warning, info
 
 from styles.theme import apply_theme
 
 user_id = st.session_state.get('user_id')
 if not user_id:
-    st.warning('Please log in from the main application page.')
+    warning('Please log in from the main application page.')
     st.stop()
 apply_theme()
 
@@ -21,7 +22,7 @@ st.markdown("---")
 
 st.markdown("### 🚰 Your Daily Habits")
 
-st.info(
+info(
     "Typical ranges — Shower: 5–15 min/day · Laundry: 2–7 loads/week "
     "· Dishwasher: 3–14 runs/week · Garden: 0–60 min/week"
 )
@@ -54,7 +55,7 @@ analyze_btn = st.button("💧 Calculate Water Footprint", use_container_width=Tr
 if analyze_btn:
     warnings = validate_water_inputs(shower_mins, laundry_loads, dishwasher_runs, garden_mins)
     for w in warnings:
-        st.warning(w)
+        warning(w)
 
     with st.spinner("Calculating your water footprint..."):
         total_daily, contributors = calculate_water_footprint(
@@ -73,7 +74,7 @@ if analyze_btn:
 
 if "water_analysis" in st.session_state:
     data = st.session_state.water_analysis
-    st.success("✅ Water footprint calculated!")
+    success("✅ Water footprint calculated!")
     
     st.markdown("---")
     st.markdown("<div class='section-header'>📊 Your Water Footprint Analysis</div>", unsafe_allow_html=True)
@@ -99,18 +100,18 @@ if "water_analysis" in st.session_state:
     st.plotly_chart(fig_bar, use_container_width=True)
     
     st.markdown("### 💡 Insight")
-    st.info(data["insight"])
+    info(data["insight"])
     
     st.markdown("### 🌱 Recommendations")
     for rec in data["recommendations"]:
-        st.success(rec)
+        success(rec)
 
     st.markdown("---")
     st.markdown("<div class='section-header'>📈 Historical Water Trends</div>", unsafe_allow_html=True)
 
     water_history = get_water_assessments(1)
     if len(water_history) < 2:
-        st.info("Complete at least 2 assessments to see historical trends.")
+        info("Complete at least 2 assessments to see historical trends.")
     else:
         df_hist = pd.DataFrame(
             water_history,

@@ -14,12 +14,13 @@ from report import generate_pdf
 import gamification as gf
 from marketplace import *
 import energy_audit as ea
+from notifications import success, error, warning, info
 
 from styles.theme import apply_theme
 
 user_id = st.session_state.get('user_id')
 if not user_id:
-    st.warning('Please log in from the main application page.')
+    warning('Please log in from the main application page.')
     st.stop()
 apply_theme()
 
@@ -55,7 +56,7 @@ def render_challenge_card(ch_id, ch_data, user_challenges, enrolled_ids):
             ][-1]
 
             if status == "completed":
-                st.success("Challenge Completed! 🎉")
+                success("Challenge Completed! 🎉")
             else:
                 current_prog = [c["progress_value"] for c in user_challenges if c["challenge_id"] == ch_id][-1]
                 remaining = max(ch_data["target"] - current_prog, 0)
@@ -73,10 +74,10 @@ def render_challenge_card(ch_id, ch_data, user_challenges, enrolled_ids):
                 is_valid = True
 
                 if prog_val <= 0:
-                    st.warning("⚠️ Progress must be greater than zero.")
+                    warning("⚠️ Progress must be greater than zero.")
                     is_valid = False
                 elif prog_val > remaining:
-                    st.warning(
+                    warning(
                         f"⚠️ You can only add up to {remaining} {ch_data['unit']} to complete this challenge."
                     )
                     is_valid = False
@@ -92,7 +93,7 @@ def render_challenge_card(ch_id, ch_data, user_challenges, enrolled_ids):
                         progress_increment=prog_val,
                     )
                     gf.validate_challenge_progress(1, ch_id)
-                    st.success("Progress updated successfully!")
+                    success("Progress updated successfully!")
                     st.rerun()
         else:
             if st.button(

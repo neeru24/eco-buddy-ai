@@ -14,6 +14,7 @@ from report import generate_pdf
 import gamification as gf
 from marketplace import *
 import energy_audit as ea
+from notifications import success, error, warning, info
 
 from styles.theme import apply_theme
 apply_theme()
@@ -46,7 +47,7 @@ def compute_arima_forecast(ts_data):
 
 user_id = st.session_state.get('user_id')
 if not user_id:
-    st.warning('Please log in from the main application page.')
+    warning('Please log in from the main application page.')
     st.stop()
 
 tab_assess, tab_forecast = st.tabs(['📝 Assessment', '📈 Forecasting'])
@@ -73,13 +74,13 @@ with tab_assess:
                 if parsed_data:
                     st.session_state.temp_parsed = parsed_data
                 else:
-                    st.error("Could not parse the text. Please try again.")
+                    error("Could not parse the text. Please try again.")
         else:
-            st.warning("Please enter some text first.")
+            warning("Please enter some text first.")
 
     if "temp_parsed" in st.session_state:
         tp = st.session_state.temp_parsed
-        st.info(f"**We found:** {tp.get('distance', 10.0)} km by {tp.get('transport', 'Car')}, and {tp.get('diet', 'Vegetarian')} diet. Is this correct?")
+        info(f"**We found:** {tp.get('distance', 10.0)} km by {tp.get('transport', 'Car')}, and {tp.get('diet', 'Vegetarian')} diet. Is this correct?")
         c_yes, c_no = st.columns(2)
         with c_yes:
             if st.button("✅ Yes, use this", key="confirm_yes"):
@@ -111,9 +112,9 @@ with tab_assess:
                     parsed_val = parse_energy_consumption(extracted_text)
                     if parsed_val is not None:
                         st.session_state.extracted_kwh = float(parsed_val)
-                        st.success(f"Extracted {parsed_val} kWh from bill!")
+                        success(f"Extracted {parsed_val} kWh from bill!")
                     else:
-                        st.warning("Could not extract energy consumption. Please enter manually.")
+                        warning("Could not extract energy consumption. Please enter manually.")
 
         electricity = st.number_input("Monthly Electricity (kWh)", min_value=0.0, value=float(st.session_state.get('extracted_kwh', 0.0)), step=10.0)
         diet = st.selectbox("Diet Type", ["Vegetarian", "Non-Vegetarian"])
@@ -121,7 +122,7 @@ with tab_assess:
     with col3:
         st.markdown("<div style='display: flex; align-items: center; gap: 8px; margin-bottom: 16px;'><span style='font-size: 24px;'>✈️</span><span style='font-size: 18px; font-weight: 700; color: #000;'>Travel</span></div>", unsafe_allow_html=True)
         flights = st.number_input("Annual Flights", min_value=0, value=0, step=1)
-        st.info("💡 How many long-distance flights per year?")
+        info("💡 How many long-distance flights per year?")
 
     col_btn1, col_btn2, col_btn3 = st.columns([1, 1.5, 1])
     with col_btn1:
@@ -129,7 +130,7 @@ with tab_assess:
         if reset_btn:
             st.session_state.pop("extracted_kwh", None)
             st.session_state.pop("analysis", None)
-            st.success("✅ Assessment form has been reset.")
+            success("✅ Assessment form has been reset.")
             st.rerun()
 
     with col_btn2:
@@ -151,7 +152,7 @@ with tab_assess:
 
     if "analysis" in st.session_state:
         data = st.session_state.analysis
-        st.success("✅ Analysis completed!")
+        success("✅ Analysis completed!")
         st.markdown("---")
         st.markdown("### 👤 Your Inputs")
         c1, c2 = st.columns(2)
@@ -172,10 +173,10 @@ with tab_assess:
             st.metric("🌱 Eco Score", f"{data['eco_score']}/100")
         
         st.markdown("### 💡 AI Insight")
-        st.info(data["insight"])
+        info(data["insight"])
         st.markdown("### 🌱 Recommendations")
         for rec in data["recommendations"]:
-            st.success(rec)
+            success(rec)
     else:
         st.markdown("""
         <style>
@@ -272,15 +273,15 @@ with tab_assess:
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        st.success("📊 Carbon Footprint Dashboard")
+        success("📊 Carbon Footprint Dashboard")
         st.caption("Track your yearly emissions.")
 
     with col2:
-        st.success("🤖 AI Insights")
+        success("🤖 AI Insights")
         st.caption("Get AI-powered analysis.")
 
     with col3:
-        st.success("💡 Smart Recommendations")
+        success("💡 Smart Recommendations")
         st.caption("Receive personalized eco tips.")
 
 
@@ -288,11 +289,11 @@ with tab_assess:
 
     st.markdown("## 🚀 How It Works")
 
-    st.info("1️⃣ Fill in your lifestyle details")
-    st.info("2️⃣ Click **Analyze My Impact**")
-    st.info("3️⃣ Review your carbon footprint")
-    st.info("4️⃣ Get personalized AI recommendations")
-    st.info("5️⃣ Download your PDF report")
+    info("1️⃣ Fill in your lifestyle details")
+    info("2️⃣ Click **Analyze My Impact**")
+    info("3️⃣ Review your carbon footprint")
+    info("4️⃣ Get personalized AI recommendations")
+    info("5️⃣ Download your PDF report")
 
     st.markdown("---")
     st.markdown("## ✨ Why Use EcoBuddy AI?")
@@ -300,14 +301,14 @@ with tab_assess:
     feature1, feature2 = st.columns(2)
 
     with feature1:
-        st.success("📈 Track your carbon footprint over time")
-        st.success("🤖 AI-powered personalized insights")
-        st.success("📄 Export reports as PDF")
+        success("📈 Track your carbon footprint over time")
+        success("🤖 AI-powered personalized insights")
+        success("📄 Export reports as PDF")
 
     with feature2:
-        st.success("🌍 Build sustainable habits")
-        st.success("📊 Interactive charts and trends")
-        st.success("🏆 Improve your Eco Score")
+        success("🌍 Build sustainable habits")
+        success("📊 Interactive charts and trends")
+        success("🏆 Improve your Eco Score")
 
 
     st.markdown("---")
@@ -317,14 +318,14 @@ with tab_assess:
     tip_col1, tip_col2 = st.columns(2)
 
     with tip_col1:
-        st.success("🚶 Walk or cycle for short trips")
-        st.success("💧 Save water whenever possible")
-        st.success("♻️ Recycle household waste")
+        success("🚶 Walk or cycle for short trips")
+        success("💧 Save water whenever possible")
+        success("♻️ Recycle household waste")
 
     with tip_col2:
-        st.success("⚡ Turn off unused appliances")
-        st.success("🚌 Use public transport")
-        st.success("🌱 Plant more trees")
+        success("⚡ Turn off unused appliances")
+        success("🚌 Use public transport")
+        success("🌱 Plant more trees")
 
     
         st.markdown("---")
@@ -343,7 +344,7 @@ with tab_assess:
 
     st.markdown("## 🚀 Ready to Begin?")
 
-    st.success(
+    success(
         "Complete the lifestyle form above and click **Analyze My Impact** "
         "to generate your first carbon footprint assessment."
     )
@@ -354,7 +355,7 @@ with tab_forecast:
     
     assessments = get_assessments(user_id)
     if len(assessments) < 5:
-        st.info("We need at least 5 logs to generate a reliable forecast. Keep logging your footprint!")
+        info("We need at least 5 logs to generate a reliable forecast. Keep logging your footprint!")
     else:
         try:
             import pandas as pd
@@ -408,8 +409,8 @@ with tab_forecast:
             st.plotly_chart(fig, use_container_width=True)
             
             if forecast_line[-1] > ts_data[-1]:
-                st.warning("Your footprint is projected to increase. Try adopting more eco-friendly habits!")
+                warning("Your footprint is projected to increase. Try adopting more eco-friendly habits!")
             else:
-                st.success("Great job! Your footprint is on a downward trend. Keep it up!")
+                success("Great job! Your footprint is on a downward trend. Keep it up!")
         except Exception as e:
-            st.error(f"Error generating forecast: {e}")
+            error(f"Error generating forecast: {e}")

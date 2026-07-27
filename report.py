@@ -4,6 +4,7 @@ import uuid
 import streamlit as st
 from reportlab.platypus import SimpleDocTemplate, Paragraph
 from reportlab.lib.styles import getSampleStyleSheet
+from notifications import error
 
 def generate_pdf(total, eco_score, insight):
     try:
@@ -22,5 +23,5 @@ def generate_pdf(total, eco_score, insight):
         doc.build(content)
         return file_name
     except Exception:
-        st.error("Could not generate the PDF report. Please check disk space and permissions, then try again.")
+        error("Could not generate the PDF report. Please check disk space and permissions, then try again.")
         return None

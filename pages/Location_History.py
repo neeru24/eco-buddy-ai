@@ -7,6 +7,7 @@ from location_parser import parse_gpx, parse_google_takeout_json, segment_trips
 from emissions import calculate_footprint
 from database import save_assessment
 import gamification as gf
+from notifications import success, error, warning, info
 
 st.set_page_config(page_title="Location History", page_icon="🗺️", layout="wide")
 
@@ -44,9 +45,9 @@ if uploaded_file is not None:
             )
 
     if parse_error:
-        st.error(parse_error)
+        error(parse_error)
     elif not waypoints:
-        st.error(
+        error(
             "No valid waypoints found in the file. "
             "Ensure it's a valid GPX or Google Takeout JSON."
         )
@@ -74,9 +75,9 @@ if uploaded_file is not None:
 
 
     if not waypoints:
-        st.error("No valid waypoints found in the file. Ensure it's a valid GPX or Google Takeout JSON.")
+        error("No valid waypoints found in the file. Ensure it's a valid GPX or Google Takeout JSON.")
     else:
-        st.success(f"Parsed {len(waypoints)} waypoints.")
+        success(f"Parsed {len(waypoints)} waypoints.")
 
         with st.spinner("Segmenting trips and inferring transport modes..."):
             segments = segment_trips(waypoints)
@@ -214,23 +215,23 @@ if uploaded_file is not None:
                             failed_count += 1
                 
                 if success_count > 0 and failed_count == 0:
-                    st.success(
+                    success(
                         f"Successfully committed all {success_count} trips "
                         "to the emissions log!"
                     )
                 elif success_count > 0 and failed_count > 0:
-                    st.warning(
+                    warning(
                         f"Partially committed trips: {success_count} succeeded "
                         f"and {failed_count} failed."
                     )
                 elif failed_count > 0:
-                    st.error(
+                    error(
                         f"Failed to commit {failed_count} trips "
                         "to the emissions log."
 
 
                 if success_count > 0:
-                    st.success(
+                    success(
 
                         f"Successfully committed {success_count} trips to the emissions log!"
 
@@ -240,4 +241,4 @@ if uploaded_file is not None:
 
                     )
                 else:
-                    st.warning("No trips were committed.")
+                    warning("No trips were committed.")

@@ -5,6 +5,7 @@ from skill_tree_data import SKILL_TREE_NODES
 from gamification import evaluate_skill_tree, complete_skill_node
 from database import get_total_xp
 from styles.theme import apply_theme
+from notifications import success, error, warning, info
 
 apply_theme()
 
@@ -21,7 +22,7 @@ st.write(
 user_id = st.session_state.get("user_id")
 
 if user_id is None:
-    st.warning("Please log in to access your skill tree.")
+    warning("Please log in to access your skill tree.")
     st.stop()
 
 # First evaluate current state (unlock nodes if prerequisites are met)
@@ -118,27 +119,27 @@ with col2:
 
             if status == "Unlocked":
                 if st.button("Mark as Completed", type="primary"):
-                    success = complete_skill_node(user_id, return_value)
+                    completed = complete_skill_node(user_id, return_value)
 
-                    if success:
-                        st.success(
+                    if completed:
+                        success(
                             f"Completed! You earned "
                             f"{selected_node['xp_reward']} XP."
                         )
                         st.balloons()
                         st.rerun()
                     else:
-                        st.error(
+                        error(
                             "Could not complete the action. Please try again."
                         )
 
             elif status == "Locked":
-                st.warning(
+                warning(
                     "You must complete the prerequisite actions "
                     "before unlocking this node."
                 )
     else:
-        st.info(
+        info(
             "Click on a node in the roadmap to view details "
             "and update your progress."
         )

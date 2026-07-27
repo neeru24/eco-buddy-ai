@@ -2,6 +2,7 @@ import streamlit as st
 from datetime import datetime
 from data_io import export_data_json, export_data_csv_zip, import_data_json
 from database import get_assessments
+from notifications import success, error, warning, info
 
 from styles.theme import apply_theme
 
@@ -31,12 +32,12 @@ def render_export_card(
             if not empty_check(export_data):
                 st.session_state[session_key] = export_data
             else:
-                st.warning(
+                warning(
                     "⚠️ No data available to export. Add some data before exporting."
                 )
 
     if st.session_state.get(session_key):
-        st.success("✅ Export generated successfully!")
+        success("✅ Export generated successfully!")
 
         st.markdown("#### Export Details")
         st.markdown(f"**📄 File Name:** `{filename}`")
@@ -64,7 +65,7 @@ if "json_export" not in st.session_state:
 
 
 def show_export_details(file_name: str, export_format: str):
-    st.success("✅ Export generated successfully!")
+    success("✅ Export generated successfully!")
 
     st.markdown("#### Export Details")
     st.markdown(f"**📄 File Name:** `{file_name}`")
@@ -86,7 +87,7 @@ assessments = get_assessments(user_id=user_id) if user_id else get_assessments()
 assessment_count = len(assessments) if assessments else 0
 
 if assessment_count >= 5:
-    st.warning(
+    warning(
         f"⚠️ **Backup Recommended:** You have accumulated **{assessment_count} saved assessments**. "
         "Consider exporting a backup copy below to ensure your data is safe."
     )
@@ -133,7 +134,7 @@ with col1:
             if zip_data:
                 st.session_state.csv_export = zip_data
             else:
-                st.warning(
+                warning(
                     "⚠️ No data available to export. Add some data before exporting."
                 )
 
@@ -187,7 +188,7 @@ with col2:
             if json_data != "{}":
                 st.session_state.json_export = json_data
             else:
-                st.warning(
+                warning(
                     "⚠️ No data available to export. Add some data before exporting."
                 )
 
@@ -239,26 +240,26 @@ if uploaded_file is not None:
 
         # Empty file validation
         if not file_bytes:
-            st.error("❌ The uploaded file is empty. Please upload a valid EcoBuddy JSON export.")
+            error("❌ The uploaded file is empty. Please upload a valid EcoBuddy JSON export.")
             st.stop()
 
         # Decode validation
         try:
             json_content = file_bytes.decode("utf-8")
         except UnicodeDecodeError:
-            st.error("❌ Unable to read the file. Please upload a UTF-8 encoded JSON file.")
+            error("❌ Unable to read the file. Please upload a UTF-8 encoded JSON file.")
             st.stop()
 
         # Empty content validation
         if not json_content.strip():
-            st.error("❌ The uploaded file contains no data.")
+            error("❌ The uploaded file contains no data.")
             st.stop()
 
         # JSON validation
         try:
             json.loads(json_content)
         except json.JSONDecodeError as e:
-            st.error(f"❌ Invalid JSON file.\n\nDetails: {e}")
+            error(f"❌ Invalid JSON file.\n\nDetails: {e}")
             st.stop()
 
         # Import only after validation passes
@@ -267,21 +268,21 @@ if uploaded_file is not None:
 
 
         with st.spinner("Importing data..."):
-            success, message = import_data_json(
+            import_success, message = import_data_json(
                 json_content,
                 strategy=import_strategy.lower(),
 
 user_id = st.session_state.get('user_id')
 if not user_id:
-    st.warning('Please log in from the main application page.')
+    warning('Please log in from the main application page.')
     st.stop()
             )
 
-            if success:
-                st.success(message)
-                st.info(
+            if import_success:
+                success(message)
+                info(
                     "Please refresh the page or navigate to another section "
                     "to see the restored data."
                 )
             else:
-                st.error(message)
+                error(message)

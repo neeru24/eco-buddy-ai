@@ -16,6 +16,7 @@ from report import generate_pdf
 import gamification as gf
 from marketplace import *
 import energy_audit as ea
+from notifications import success, error, warning, info
 
 from styles.theme import (
     apply_theme,
@@ -32,7 +33,7 @@ import plotly.graph_objects as go
 
 user_id = st.session_state.get('user_id')
 if not user_id:
-    st.warning('Please log in from the main application page.')
+    warning('Please log in from the main application page.')
     st.stop()
 
 st.markdown("<div class='section-header'>⚡ Home Energy Audit</div>", unsafe_allow_html=True)
@@ -92,8 +93,8 @@ if submit_app:
 
     # Show errors or save appliance
     if errors:
-        for error in errors:
-            st.error(error)
+        for err in errors:
+            error(err)
     else:
         db.add_appliance(user_id, 
             app_name.strip(),
@@ -103,7 +104,7 @@ if submit_app:
             app_hours,
             app_standby
         )
-        st.success(f"Added {app_name.strip()}")
+        success(f"Added {app_name.strip()}")
         st.rerun()
 
 appliances = db.get_appliances(user_id)

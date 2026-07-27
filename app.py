@@ -33,6 +33,7 @@ from marketplace import (
     calculate_offset_cost, validate_offset_transaction, get_offset_projects,
     calculate_net_emissions, calculate_net_zero_progress, get_project_by_id, EMISSION_FACTORS
 )
+from notifications import success, error, warning, info
 
 
 
@@ -814,7 +815,7 @@ with col3:
         step=1,
         key="flights"
     )
-    st.info("💡 How many long-distance flights per year?")
+    info("💡 How many long-distance flights per year?")
 
 
 
@@ -848,7 +849,7 @@ if reset_btn:
         if key in st.session_state:
             del st.session_state[key]
 
-    st.success("✅ Assessment form has been reset.")
+    success("✅ Assessment form has been reset.")
     st.rerun()
 
  
@@ -882,7 +883,7 @@ if reset_btn:
     for key in DEFAULT_VALUES:
         if key in st.session_state:
             del st.session_state[key]
-    st.success("✅ Assessment form has been reset.")
+    success("✅ Assessment form has been reset.")
     st.rerun()
 
 tab1, tab2, tab3, tab4 = st.tabs(["🌍 Carbon Footprint", "⚡ Home Energy Audit", "🎮 Gamification", "🗺️ Route Planning & Offsets"])
@@ -911,13 +912,13 @@ with tab1:
                 if parsed_data:
                     st.session_state.temp_parsed = parsed_data
                 else:
-                    st.error("Could not parse the text. Please try again.")
+                    error("Could not parse the text. Please try again.")
         else:
-            st.warning("Please enter some text first.")
+            warning("Please enter some text first.")
 
     if "temp_parsed" in st.session_state:
         tp = st.session_state.temp_parsed
-        st.info(f"**We found:** {tp.get('distance', 10.0)} km by {tp.get('transport', 'Car')}, and {tp.get('diet', 'Vegetarian')} diet. Is this correct?")
+        info(f"**We found:** {tp.get('distance', 10.0)} km by {tp.get('transport', 'Car')}, and {tp.get('diet', 'Vegetarian')} diet. Is this correct?")
         c_yes, c_no = st.columns(2)
         with c_yes:
             if st.button("✅ Yes, use this", key="confirm_yes"):
@@ -977,9 +978,9 @@ with tab1:
                     parsed_val = parse_energy_consumption(extracted_text)
                     if parsed_val is not None:
                         st.session_state.extracted_kwh = float(parsed_val)
-                        st.success(f"Extracted {parsed_val} kWh from bill!")
+                        success(f"Extracted {parsed_val} kWh from bill!")
                     else:
-                        st.warning("Could not extract energy consumption. Please enter manually.")
+                        warning("Could not extract energy consumption. Please enter manually.")
 
         electricity = st.number_input("Monthly Electricity (kWh)", min_value=0.0, value=float(st.session_state.extracted_kwh), step=10.0)
         diet = st.selectbox("Diet Type", ["Vegetarian", "Non-Vegetarian"])
@@ -993,7 +994,7 @@ with tab1:
         </div>
         """, unsafe_allow_html=True)
         flights = st.number_input("Annual Flights", min_value=0, value=0, step=1)
-        st.info("💡 How many long-distance flights per year?")
+        info("💡 How many long-distance flights per year?")
         
 
 
@@ -1018,7 +1019,7 @@ with tab1:
             doc.build(content)
             return file_name
         except Exception:
-            st.error("Could not generate the PDF report. Please check disk space and permissions, then try again.")
+            error("Could not generate the PDF report. Please check disk space and permissions, then try again.")
             return None
 
 
@@ -1040,7 +1041,7 @@ with tab1:
             for key in DEFAULT_VALUES:
                 if key in st.session_state:
                     del st.session_state[key]
-            st.success("✅ Assessment form has been reset.")
+            success("✅ Assessment form has been reset.")
             st.rerun()
 
     with col_btn2:
@@ -1064,7 +1065,7 @@ with tab1:
             transport, distance, electricity, diet, flights, total, eco_score
         )
 
-        st.success("✅ Analysis completed!")
+        success("✅ Analysis completed!")
 
         st.markdown("---")
 
@@ -1148,13 +1149,13 @@ with tab1:
 
             # Description
             if eco_score >= 85:
-                st.info("🌟 Excellent! You're making exceptional environmental choices. Keep it up!")
+                info("🌟 Excellent! You're making exceptional environmental choices. Keep it up!")
             elif eco_score >= 70:
-                st.info("🌿 Great work! Your footprint is below average. Focus on small improvements.")
+                info("🌿 Great work! Your footprint is below average. Focus on small improvements.")
             elif eco_score >= 50:
-                st.info("🍃 Good start! There's room to improve. Check recommendations below.")
+                info("🍃 Good start! There's room to improve. Check recommendations below.")
             else:
-                st.warning("🔥 Your carbon footprint is above average. Let's work on reducing it!")
+                warning("🔥 Your carbon footprint is above average. Let's work on reducing it!")
 
         with col_badge2:
             st.markdown("<div class='section-header' style='margin-top: 0;'>📊 Emission Sources</div>", unsafe_allow_html=True)
@@ -1577,7 +1578,7 @@ with tab2:
             submit_app = st.form_submit_button("Add Appliance")
             if submit_app and app_name:
                 db.add_appliance(user_id, app_name, app_cat, app_qty, app_power, app_hours, app_standby)
-                st.success(f"Added {app_name}")
+                success(f"Added {app_name}")
                 st.rerun()
 
     appliances = db.get_appliances(user_id)
@@ -1719,7 +1720,7 @@ with tab3:
                 state = challenge_states[ch_id]
                 status = state['status']
                 if status == 'completed':
-                    st.success("Challenge Completed! 🎉")
+                    success("Challenge Completed! 🎉")
                 else:
                     current_prog = state['progress_value']
                     st.write(f"Progress: {current_prog} / {ch_data['target']}")
@@ -1796,11 +1797,11 @@ with tab4:
                 st.dataframe(df_comp.style.format({'emissions_kg': '{:.2f}'}))
                 
             except Exception as e:
-                st.error(f"Error calculating emissions: {e}")
+                error(f"Error calculating emissions: {e}")
 
     with offset_col:
         st.subheader("🛒 Simulated Offset Marketplace")
-        st.info("💡 Invest your simulated eco-points to offset carbon.")
+        info("💡 Invest your simulated eco-points to offset carbon.")
         
         projects = get_offset_projects()
         proj_names = [p["name"] for p in projects]
@@ -1823,11 +1824,11 @@ with tab4:
                     cost = calculate_offset_cost(tonnes, selected_proj["cost_per_tonne"])
                     # Defaulting to user_id=1 for now as per instructions
                     if save_offset_transaction(user_id, selected_proj["id"], selected_proj["name"], tonnes, selected_proj["cost_per_tonne"], cost):
-                        st.success(f"Simulated purchase successful! Offset {tonnes}t for ${cost:.2f}.")
+                        success(f"Simulated purchase successful! Offset {tonnes}t for ${cost:.2f}.")
                     else:
-                        st.error("Failed to save transaction.")
+                        error("Failed to save transaction.")
                 else:
-                    st.error(msg)
+                    error(msg)
 
     st.markdown("---")
     
@@ -1859,7 +1860,7 @@ with tab4:
                 clear_offset_transactions(user_id)
                 st.rerun()
         else:
-            st.info("No transactions yet. Visit the marketplace to start your portfolio!")
+            info("No transactions yet. Visit the marketplace to start your portfolio!")
     st.markdown("""
     <style>
     @keyframes bounce {
@@ -1955,15 +1956,15 @@ st.markdown("## 🌱 What You'll Unlock")
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    st.success("📊 Carbon Footprint Dashboard")
+    success("📊 Carbon Footprint Dashboard")
     st.caption("Track your yearly emissions.")
 
 with col2:
-    st.success("🤖 AI Insights")
+    success("🤖 AI Insights")
     st.caption("Get AI-powered analysis.")
 
 with col3:
-    st.success("💡 Smart Recommendations")
+    success("💡 Smart Recommendations")
     st.caption("Receive personalized eco tips.")
 
 
@@ -1971,11 +1972,11 @@ st.markdown("---")
 
 st.markdown("## 🚀 How It Works")
 
-st.info("1️⃣ Fill in your lifestyle details")
-st.info("2️⃣ Click **Analyze My Impact**")
-st.info("3️⃣ Review your carbon footprint")
-st.info("4️⃣ Get personalized AI recommendations")
-st.info("5️⃣ Download your PDF report")
+info("1️⃣ Fill in your lifestyle details")
+info("2️⃣ Click **Analyze My Impact**")
+info("3️⃣ Review your carbon footprint")
+info("4️⃣ Get personalized AI recommendations")
+info("5️⃣ Download your PDF report")
 
 st.markdown("---")
 st.markdown("## ✨ Why Use EcoBuddy AI?")
@@ -1983,14 +1984,14 @@ st.markdown("## ✨ Why Use EcoBuddy AI?")
 feature1, feature2 = st.columns(2)
 
 with feature1:
-    st.success("📈 Track your carbon footprint over time")
-    st.success("🤖 AI-powered personalized insights")
-    st.success("📄 Export reports as PDF")
+    success("📈 Track your carbon footprint over time")
+    success("🤖 AI-powered personalized insights")
+    success("📄 Export reports as PDF")
 
 with feature2:
-    st.success("🌍 Build sustainable habits")
-    st.success("📊 Interactive charts and trends")
-    st.success("🏆 Improve your Eco Score")
+    success("🌍 Build sustainable habits")
+    success("📊 Interactive charts and trends")
+    success("🏆 Improve your Eco Score")
 
 
 st.markdown("---")
@@ -2000,14 +2001,14 @@ st.markdown("## 💡 Eco Tips")
 tip_col1, tip_col2 = st.columns(2)
 
 with tip_col1:
-    st.success("🚶 Walk or cycle for short trips")
-    st.success("💧 Save water whenever possible")
-    st.success("♻️ Recycle household waste")
+    success("🚶 Walk or cycle for short trips")
+    success("💧 Save water whenever possible")
+    success("♻️ Recycle household waste")
 
 with tip_col2:
-    st.success("⚡ Turn off unused appliances")
-    st.success("🚌 Use public transport")
-    st.success("🌱 Plant more trees")
+    success("⚡ Turn off unused appliances")
+    success("🚌 Use public transport")
+    success("🌱 Plant more trees")
 
     
     st.markdown("---")
@@ -2026,7 +2027,7 @@ st.markdown("---")
 
 st.markdown("## 🚀 Ready to Begin?")
 
-st.success(
+success(
     "Complete the lifestyle form above and click **Analyze My Impact** "
     "to generate your first carbon footprint assessment."
 )

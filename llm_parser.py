@@ -4,6 +4,8 @@ import time
 import requests
 import re
 import streamlit as st
+from cache import cached
+from cache_config import TTL_LLM_RESPONSE
 
 LLM_COOLDOWN_SECONDS = 2.0
 
@@ -18,7 +20,7 @@ def _check_rate_limit(provider):
     return True
 
 
-@st.cache_data
+@cached(ttl=TTL_LLM_RESPONSE)
 def parse_quick_log(text: str) -> dict:
     """
     Parses natural language into a structured JSON using Gemini 2.5 Flash,

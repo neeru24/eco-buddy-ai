@@ -7,24 +7,26 @@ import database as db
 import data_io as io_mod
 
 # Use a test database
-db.DB_NAME = "test_eco_buddy_io.db"
-io_mod.DB_NAME = "test_eco_buddy_io.db"
+TEST_DB = "test_eco_buddy_io.db"
 
 @pytest.fixture(autouse=True)
 def setup_teardown():
+    original_db_name = db.DB_NAME
     # Setup
-    db.DB_NAME = "test_eco_buddy_io.db"
-    io_mod.DB_NAME = "test_eco_buddy_io.db"
-    if os.path.exists(db.DB_NAME):
-        os.remove(db.DB_NAME)
+    db.DB_NAME = TEST_DB
+    io_mod.DB_NAME = TEST_DB
+    if os.path.exists(TEST_DB):
+        os.remove(TEST_DB)
     db.init_db()
     db.init_energy_db()
     db.init_gamification_db()
     db.init_marketplace_db()
     yield
     # Teardown
-    if os.path.exists(db.DB_NAME):
-        os.remove(db.DB_NAME)
+    db.DB_NAME = original_db_name
+    io_mod.DB_NAME = original_db_name
+    if os.path.exists(TEST_DB):
+        os.remove(TEST_DB)
 
 def test_export_import_json_roundtrip():
     # Populate some data

@@ -3,6 +3,8 @@ import os
 import streamlit as st
 import datetime
 from PIL import Image, ImageDraw, ImageFont
+from cache import cached
+from cache_config import TTL_COMPUTED_ANALYTICS, CACHE_CATEGORY_COMPUTED
 
 from database import (
     award_xp, get_total_xp, get_user_challenges, complete_challenge,
@@ -52,7 +54,7 @@ def calculate_level_progress(total_xp):
     return progress
 
 
-@st.cache_data
+@cached(category=CACHE_CATEGORY_COMPUTED, ttl=TTL_COMPUTED_ANALYTICS)
 def calculate_streak(user_id, activities_dates):
     # Adjust check to allow yesterday's log to keep streak alive (#86).
     # If the most recent log was yesterday, the streak remains active;

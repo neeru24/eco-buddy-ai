@@ -2,16 +2,18 @@ import os
 import requests
 import streamlit as st
 import math
-from config import ECO_SCORE_BASELINE, ECO_SCORE_SENSITIVITY, CATEGORY_WEIGHTS, DIET_TYPES, normalize_diet
-VALID_TRANSPORT = {"Car", "Bike", "Public Transport", "Walking"}
-VALID_DIET = set(DIET_TYPES)
-VALID_REGIONS = {"Global", "US", "UK", "EU"}
-MAX_DISTANCE = 500
-MAX_ELECTRICITY = 10000
-MAX_FLIGHTS = 365
+from config import (
+    ECO_SCORE_BASELINE, ECO_SCORE_SENSITIVITY, CATEGORY_WEIGHTS,
+    VALID_TRANSPORT, VALID_DIET, VALID_REGIONS,
+    MAX_DISTANCE, MAX_ELECTRICITY, MAX_FLIGHTS,
+    TRANSPORT_EMISSION_FACTORS, DIET_EMISSION_FACTORS,
+    normalize_diet,
+)
+from cache import cached
+from cache_config import TTL_EXTERNAL_API, CACHE_CATEGORY_API
 
 
-@st.cache_data(ttl=86400)
+@cached(ttl=TTL_EXTERNAL_API, category=CACHE_CATEGORY_API)
 def fetch_emission_factors(region: str) -> dict:
     """
     Fetches dynamic emission factors from a third-party Carbon API.
@@ -89,17 +91,9 @@ def calculate_footprint(
     contributors = {}
 
     # Transport emissions (kg CO₂ per km)
-    transport_factors = {
-        "Car": 0.21,
-        "Bike": 0.0,
-        "Public Transport": 0.08,
-        "Walking": 0.0
-    }
-
     transport_emission = (
-        transport_factors[transport] *
-        distance *        # km per day
-        365               # yearly estimate
+        TRANSPORT_EMISSION_FACTORS[transport] *
+        distance * 365
     )
 
     contributors["Transport"] = round(transport_emission, 2)
@@ -112,15 +106,7 @@ def calculate_footprint(
     contributors["Electricity"] = round(electricity_emission, 2)
 
     # Diet (annual estimate)
-    diet_factors = {
-        "Vegan": 800,
-        "Vegetarian": 1000,
-        "Non-Vegetarian": 1800,
-        "Omnivore": 2200,
-        "Heavy Meat": 3000,
-    }
-
-    diet_emission = diet_factors[diet]
+    diet_emission = DIET_EMISSION_FACTORS[diet]
     contributors["Diet"] = diet_emission
 
     # Flights

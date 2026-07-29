@@ -1,10 +1,16 @@
+import json
+import os
 import streamlit as st
 
-def apply_theme():
-    st.markdown("""
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+_PREF_PATH = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    ".theme_preference.json",
+)
 
+VALID_THEMES = ["light", "dark"]
+DEFAULT_THEME = "dark"
+
+LIGHT_CSS = """
     :root {
         --sky: #b9d7f4;
         --sky-soft: #d9eafa;
@@ -20,32 +26,17 @@ def apply_theme():
         --radius: 18px;
     }
 
-    * {
-        box-sizing: border-box;
-    }
-
-    html {
-        scroll-behavior: smooth;
-    }
-
     body,
     [data-testid="stAppViewContainer"] {
-        font-family: 'Inter', sans-serif;
         color: var(--ink);
         background:
             linear-gradient(180deg, rgba(185, 215, 244, 0.74) 0%, rgba(244, 248, 240, 0.95) 48%, #f7faf3 100%),
             radial-gradient(circle at 14% 12%, rgba(255, 255, 255, 0.86), transparent 30%),
             linear-gradient(135deg, #d7ebff 0%, #f4f8e8 54%, #eaf5df 100%);
-        min-height: 100vh;
     }
 
     [data-testid="stHeader"] {
         background: transparent;
-    }
-
-    .block-container {
-        max-width: 1280px;
-        padding: 24px 32px 56px;
     }
 
     [data-testid="stSidebar"] {
@@ -59,90 +50,13 @@ def apply_theme():
         color: var(--ink);
     }
 
-    .title {
-        margin: 8px 0 12px;
-        color: var(--ink);
-        font-size: clamp(46px, 6vw, 82px);
-        line-height: 1;
-        font-weight: 800;
-        letter-spacing: 0;
-        text-align: center;
-        animation: fadeUp 700ms ease both;
-    }
-
-    .subtitle {
-        max-width: 720px;
-        margin: 0 auto 30px;
-        color: var(--muted);
-        font-size: 19px;
-        line-height: 1.6;
-        font-weight: 500;
-        text-align: center;
-        animation: fadeUp 800ms 80ms ease both;
-    }
-
-    .section-header {
-        margin: 38px 0 18px;
-        color: var(--ink);
-        font-size: clamp(28px, 3vw, 42px);
-        line-height: 1.08;
-        font-weight: 800;
-        letter-spacing: 0;
-        animation: fadeUp 650ms ease both;
-    }
-
-    .section-header::after {
-        content: '';
-        display: block;
-        width: 88px;
-        height: 4px;
-        margin-top: 14px;
-        border-radius: 999px;
-        background: linear-gradient(90deg, #030504, var(--leaf), rgba(120, 169, 69, 0));
-    }
-
     .input-section,
     .card,
     .card-highlight,
     .metric-card {
-        border: 1px solid var(--line);
-        border-radius: var(--radius);
         background: linear-gradient(145deg, var(--paper-strong), rgba(255, 255, 255, 0.64));
+        border-color: var(--line);
         box-shadow: 0 18px 50px rgba(57, 86, 47, 0.12);
-        backdrop-filter: blur(18px);
-        position: relative;
-        overflow: hidden;
-        animation: fadeUp 700ms ease both;
-        transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
-    }
-
-    .input-section {
-        padding: 34px;
-        margin-bottom: 24px;
-    }
-
-    .card,
-    .card-highlight,
-    .metric-card {
-        padding: 26px;
-        margin-bottom: 16px;
-    }
-
-    .metric-card::before,
-    .card-highlight::before {
-        content: '';
-        position: absolute;
-        inset: 0 0 auto 0;
-        height: 5px;
-        background: linear-gradient(90deg, #030504, var(--leaf), #b6d274);
-    }
-
-    .metric-card:hover,
-    .card:hover,
-    .card-highlight:hover {
-        transform: translateY(-6px);
-        border-color: rgba(95, 143, 54, 0.28);
-        box-shadow: 0 26px 64px rgba(57, 86, 47, 0.17);
     }
 
     .card-highlight {
@@ -151,74 +65,25 @@ def apply_theme():
             linear-gradient(135deg, rgba(120, 169, 69, 0.12), transparent);
     }
 
-    .badge {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-height: 42px;
-        padding: 0 20px;
-        border-radius: 999px;
-        border: 1px solid rgba(8, 11, 10, 0.08);
-        background: #030504;
-        color: #fff;
-        box-shadow: 0 14px 30px rgba(0, 0, 0, 0.14);
-        font-size: 14px;
-        font-weight: 800;
-        letter-spacing: 0;
-    }
-
-    .badge-champion {
-        background: linear-gradient(135deg, #f4c760, #d8831e);
-        color: #2c1804;
-    }
-
-    .badge-guardian {
-        background: linear-gradient(135deg, #acd66f, #5f8f36);
-        color: #0d1c0f;
-    }
-
-    .badge-learner {
-        background: linear-gradient(135deg, #b9d7f4, #6aa0cf);
-        color: #071927;
-    }
-
-    .badge-high {
-        background: linear-gradient(135deg, #ff8e70, #d84b35);
-        color: #2e0904;
+    .metric-card::before,
+    .card-highlight::before {
+        background: linear-gradient(90deg, #030504, var(--leaf), #b6d274);
     }
 
     .progress-bar {
-        width: 100%;
-        height: 12px;
-        margin-top: 12px;
-        border-radius: 999px;
         background: rgba(8, 11, 10, 0.08);
-        overflow: hidden;
     }
 
     .progress-fill {
-        height: 100%;
-        border-radius: inherit;
         background: linear-gradient(90deg, #030504, var(--moss), var(--leaf));
-        box-shadow: 0 0 20px rgba(95, 143, 54, 0.34);
-        transition: width 600ms ease;
-    }
-
-    hr {
-        height: 1px;
-        margin: 32px 0;
-        border: none;
-        background: linear-gradient(90deg, transparent, rgba(8, 11, 10, 0.16), transparent);
     }
 
     .stTextInput > div > div > input,
     .stNumberInput input,
     .stSelectbox [data-baseweb="select"],
     .stTextArea textarea {
-        min-height: 48px;
-        border: 1px solid rgba(8, 11, 10, 0.12) !important;
-        border-radius: 12px !important;
         background: rgba(255, 255, 255, 0.88) !important;
+        border-color: rgba(8, 11, 10, 0.12) !important;
         color: var(--ink) !important;
         box-shadow: 0 12px 30px rgba(57, 86, 47, 0.08);
     }
@@ -233,34 +98,16 @@ def apply_theme():
     .stButton > button,
     .stDownloadButton > button,
     [data-testid="stFormSubmitButton"] > button {
-        min-height: 52px;
-        padding: 0 28px !important;
-        border: none !important;
-        border-radius: 12px !important;
         background: #030504 !important;
         color: #fff !important;
         box-shadow: 0 16px 34px rgba(0, 0, 0, 0.2) !important;
-        font-size: 15px !important;
-        font-weight: 800 !important;
-        letter-spacing: 0 !important;
-        transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease !important;
     }
 
     .stButton > button:hover,
     .stDownloadButton > button:hover,
     [data-testid="stFormSubmitButton"] > button:hover {
-        transform: translateY(-2px);
         background: #101713 !important;
         box-shadow: 0 22px 44px rgba(0, 0, 0, 0.26) !important;
-    }
-
-    .stInfo,
-    .stWarning,
-    .stSuccess,
-    .stError {
-        border-radius: 14px !important;
-        border: 1px solid var(--line) !important;
-        box-shadow: 0 12px 30px rgba(57, 86, 47, 0.08);
     }
 
     .stInfo {
@@ -274,8 +121,9 @@ def apply_theme():
     .stSuccess {
         background: rgba(172, 214, 111, 0.26) !important;
     }
+"""
 
-    /* DARK PREMIUM THEME OVERRIDES */
+DARK_CSS = """
     :root {
         --sky: #8ec5ff;
         --sky-soft: #18273a;
@@ -300,8 +148,8 @@ def apply_theme():
             linear-gradient(145deg, #030712 0%, #07130d 42%, #111827 100%) !important;
     }
 
-    .block-container {
-        padding-top: 28px;
+    [data-testid="stHeader"] {
+        background: transparent;
     }
 
     [data-testid="stSidebar"] {
@@ -312,20 +160,6 @@ def apply_theme():
 
     [data-testid="stSidebar"] * {
         color: var(--ink);
-    }
-
-    .title {
-        color: var(--ink);
-        text-shadow: 0 18px 48px rgba(74, 222, 128, 0.18);
-    }
-
-    .subtitle,
-    .section-header {
-        color: var(--ink);
-    }
-
-    .subtitle {
-        color: var(--muted);
     }
 
     .input-section,
@@ -417,7 +251,7 @@ def apply_theme():
     [style*="rgb(156, 163, 175)"] {
         color: var(--muted) !important;
     }
-    
+
     [style*="#4ade80"],
     [style*="rgb(74, 222, 128)"] {
         color: var(--moss) !important;
@@ -516,47 +350,23 @@ def apply_theme():
         background: rgba(34, 197, 94, 0.14);
     }
 
-    @keyframes fadeUp {
-        from {
-            opacity: 0;
-            transform: translateY(18px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    @media (max-width: 760px) {
-        .block-container {
-            padding: 16px 14px 42px;
-        }
-
-        .input-section,
-        .card,
-        .card-highlight,
-        .metric-card {
-            padding: 22px;
-        }
-    }
-
     button[data-baseweb="tab"] > div[data-testid="stMarkdownContainer"] > p {
         color: #d1d5db !important;
         font-weight: 600 !important;
     }
-    
+
     button[data-baseweb="tab"][aria-selected="true"] > div[data-testid="stMarkdownContainer"] > p {
         color: #4ade80 !important;
         font-weight: 800 !important;
     }
-    
+
     [data-testid="stExpander"] {
         background: #0f172a !important;
         border: 1px solid rgba(134, 239, 172, 0.28) !important;
         border-radius: 8px !important;
         overflow: hidden;
     }
-    
+
     [data-testid="stExpander"] details {
         background: #0f172a !important;
     }
@@ -564,7 +374,7 @@ def apply_theme():
     [data-testid="stExpander"] summary {
         background-color: #0f172a !important;
     }
-    
+
     [data-testid="stExpander"] summary:hover {
         background-color: #1e293b !important;
     }
@@ -577,15 +387,298 @@ def apply_theme():
         font-weight: 600 !important;
         fill: #ffffff !important;
     }
-    
+
     [data-testid="stExpanderDetails"] {
         background-color: #0f172a !important;
         color: #d1d5db !important;
     }
+"""
+
+THEMES = {
+    "light": {"name": "Light", "icon": "☀️", "css": LIGHT_CSS},
+    "dark": {"name": "Dark", "icon": "🌙", "css": DARK_CSS},
+}
+
+
+def _save_theme(name):
+    try:
+        with open(_PREF_PATH, "w") as f:
+            json.dump({"theme": name}, f)
+    except (OSError, IOError):
+        pass
+
+
+def _load_theme():
+    try:
+        with open(_PREF_PATH, "r") as f:
+            data = json.load(f)
+        if isinstance(data, dict):
+            name = data.get("theme", "")
+            if name in VALID_THEMES:
+                return name
+    except (FileNotFoundError, json.JSONDecodeError, OSError, KeyError, AttributeError):
+        pass
+    return DEFAULT_THEME
+
+
+def render_theme_selector():
+    if "theme" not in st.session_state:
+        st.session_state.theme = _load_theme()
+
+    current = st.session_state.theme
+    options = [f"{THEMES[k]['icon']} {THEMES[k]['name']}" for k in VALID_THEMES]
+    labels_by_name = {f"{THEMES[k]['icon']} {THEMES[k]['name']}": k for k in VALID_THEMES}
+    current_label = f"{THEMES[current]['icon']} {THEMES[current]['name']}"
+
+    selected = st.sidebar.selectbox(
+        "Theme",
+        options,
+        index=options.index(current_label) if current_label in options else 0,
+        key="_theme_selector",
+    )
+
+    chosen = labels_by_name.get(selected, DEFAULT_THEME)
+    if chosen != st.session_state.theme:
+        st.session_state.theme = chosen
+        _save_theme(chosen)
+        st.rerun()
+
+
+def apply_theme():
+    if "theme" not in st.session_state:
+        st.session_state.theme = _load_theme()
+
+    theme_name = st.session_state.get("theme", DEFAULT_THEME)
+    if theme_name not in THEMES:
+        theme_name = DEFAULT_THEME
+
+    css = THEMES[theme_name]["css"]
+
+    st.markdown(f"""
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+    * {{
+        box-sizing: border-box;
+    }}
+
+    html {{
+        scroll-behavior: smooth;
+    }}
+
+    .block-container {{
+        max-width: 1280px;
+        padding: 24px 32px 56px;
+    }}
+
+    .title {{
+        margin: 8px 0 12px;
+        color: var(--ink);
+        font-size: clamp(46px, 6vw, 82px);
+        line-height: 1;
+        font-weight: 800;
+        letter-spacing: 0;
+        text-align: center;
+        animation: fadeUp 700ms ease both;
+    }}
+
+    .subtitle {{
+        max-width: 720px;
+        margin: 0 auto 30px;
+        color: var(--muted);
+        font-size: 19px;
+        line-height: 1.6;
+        font-weight: 500;
+        text-align: center;
+        animation: fadeUp 800ms 80ms ease both;
+    }}
+
+    .section-header {{
+        margin: 38px 0 18px;
+        color: var(--ink);
+        font-size: clamp(28px, 3vw, 42px);
+        line-height: 1.08;
+        font-weight: 800;
+        letter-spacing: 0;
+        animation: fadeUp 650ms ease both;
+    }}
+
+    .section-header::after {{
+        content: '';
+        display: block;
+        width: 88px;
+        height: 4px;
+        margin-top: 14px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #030504, var(--leaf), rgba(120, 169, 69, 0));
+    }}
+
+    .input-section,
+    .card,
+    .card-highlight,
+    .metric-card {{
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: 0 18px 50px rgba(57, 86, 47, 0.12);
+        backdrop-filter: blur(18px);
+        position: relative;
+        overflow: hidden;
+        animation: fadeUp 700ms ease both;
+        transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+    }}
+
+    .input-section {{
+        padding: 34px;
+        margin-bottom: 24px;
+    }}
+
+    .card,
+    .card-highlight,
+    .metric-card {{
+        padding: 26px;
+        margin-bottom: 16px;
+    }}
+
+    .metric-card::before,
+    .card-highlight::before {{
+        content: '';
+        position: absolute;
+        inset: 0 0 auto 0;
+        height: 5px;
+    }}
+
+    .metric-card:hover,
+    .card:hover,
+    .card-highlight:hover {{
+        transform: translateY(-6px);
+        border-color: rgba(95, 143, 54, 0.28);
+        box-shadow: 0 26px 64px rgba(57, 86, 47, 0.17);
+    }}
+
+    .badge {{
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 42px;
+        padding: 0 20px;
+        border-radius: 999px;
+        border: 1px solid rgba(8, 11, 10, 0.08);
+        background: #030504;
+        color: #fff;
+        box-shadow: 0 14px 30px rgba(0, 0, 0, 0.14);
+        font-size: 14px;
+        font-weight: 800;
+        letter-spacing: 0;
+    }}
+
+    .badge-champion {{
+        background: linear-gradient(135deg, #f4c760, #d8831e);
+        color: #2c1804;
+    }}
+
+    .badge-guardian {{
+        background: linear-gradient(135deg, #acd66f, #5f8f36);
+        color: #0d1c0f;
+    }}
+
+    .badge-learner {{
+        background: linear-gradient(135deg, #b9d7f4, #6aa0cf);
+        color: #071927;
+    }}
+
+    .badge-high {{
+        background: linear-gradient(135deg, #ff8e70, #d84b35);
+        color: #2e0904;
+    }}
+
+    .progress-bar {{
+        width: 100%;
+        height: 12px;
+        margin-top: 12px;
+        border-radius: 999px;
+        overflow: hidden;
+    }}
+
+    .progress-fill {{
+        height: 100%;
+        border-radius: inherit;
+        box-shadow: 0 0 20px rgba(95, 143, 54, 0.34);
+        transition: width 600ms ease;
+    }}
+
+    hr {{
+        height: 1px;
+        margin: 32px 0;
+        border: none;
+        background: linear-gradient(90deg, transparent, rgba(8, 11, 10, 0.16), transparent);
+    }}
+
+    .stTextInput > div > div > input,
+    .stNumberInput input,
+    .stSelectbox [data-baseweb="select"],
+    .stTextArea textarea {{
+        min-height: 48px;
+        border: 1px solid rgba(8, 11, 10, 0.12) !important;
+        border-radius: 12px !important;
+    }}
+
+    .stButton > button,
+    .stDownloadButton > button,
+    [data-testid="stFormSubmitButton"] > button {{
+        min-height: 52px;
+        padding: 0 28px !important;
+        border: none !important;
+        border-radius: 12px !important;
+        font-size: 15px !important;
+        font-weight: 800 !important;
+        letter-spacing: 0 !important;
+        transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease !important;
+    }}
+
+    .stButton > button:hover,
+    .stDownloadButton > button:hover,
+    [data-testid="stFormSubmitButton"] > button:hover {{
+        transform: translateY(-2px);
+    }}
+
+    .stInfo,
+    .stWarning,
+    .stSuccess,
+    .stError {{
+        border-radius: 14px !important;
+        border: 1px solid var(--line) !important;
+        box-shadow: 0 12px 30px rgba(57, 86, 47, 0.08);
+    }}
+
+    @keyframes fadeUp {{
+        from {{
+            opacity: 0;
+            transform: translateY(18px);
+        }}
+        to {{
+            opacity: 1;
+            transform: translateY(0);
+        }}
+    }}
+
+    @media (max-width: 760px) {{
+        .block-container {{
+            padding: 16px 14px 42px;
+        }}
+
+        .input-section,
+        .card,
+        .card-highlight,
+        .metric-card {{
+            padding: 22px;
+        }}
+    }}
+{css}
 </style>
 
 """, unsafe_allow_html=True)
-    
+
+
 def render_empty_state(icon, title, message):
     st.markdown(
         f"""

@@ -1,5 +1,7 @@
 import streamlit as st
 import pandas as pd
+from cache import cached
+from cache_config import TTL_COMPUTED_ANALYTICS, CACHE_CATEGORY_COMPUTED, CACHE_CATEGORY_STATIC
 
 # Emissions factors (kg CO2e per passenger-km)
 # Assumptions based on typical global averages, can be refined based on regional data
@@ -132,7 +134,7 @@ def calculate_recurring_trip_emissions(trip_emissions: float, trips_per_week: in
     }
 
 
-@st.cache_data
+@cached(category=CACHE_CATEGORY_COMPUTED, ttl=TTL_COMPUTED_ANALYTICS)
 def compare_transit_modes(distance_km: float, passenger_count: int = 1) -> list:
     """Compares emissions across all supported transit modes for a given distance."""
     results = []
@@ -151,7 +153,7 @@ def compare_transit_modes(distance_km: float, passenger_count: int = 1) -> list:
     return results
 
 
-@st.cache_data
+@cached(category=CACHE_CATEGORY_STATIC)
 def get_offset_projects() -> list:
     """Returns the list of available simulated offset projects."""
     return OFFSET_PROJECTS

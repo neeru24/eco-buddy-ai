@@ -1,7 +1,9 @@
 import streamlit as st
 from config import normalize_diet
+from cache import cached
+from cache_config import TTL_COMPUTED_ANALYTICS, CACHE_CATEGORY_COMPUTED
 
-@st.cache_data
+@cached(category=CACHE_CATEGORY_COMPUTED, ttl=TTL_COMPUTED_ANALYTICS)
 def generate_recommendations(
     transport,
     electricity,
@@ -121,7 +123,7 @@ def generate_recommendations(
     return insight, recommendations
 
 
-@st.cache_data
+@cached(category=CACHE_CATEGORY_COMPUTED, ttl=TTL_COMPUTED_ANALYTICS)
 def generate_water_recommendations(contributors, total_daily, diet):
     diet = normalize_diet(diet)
     recommendations = []

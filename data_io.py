@@ -6,6 +6,9 @@ import zipfile
 import streamlit as st
 from database import DB_NAME
 import database
+from cache import cached
+from cache_config import CACHE_CATEGORY_SESSION
+from invalidation import invalidate_all_db_caches, invalidate_export_caches
 
 
 def _dict_factory(cursor, row):
@@ -35,7 +38,7 @@ def _get_all_table_data(table_name):
             conn.close()
 
 
-@st.cache_data
+@cached(category=CACHE_CATEGORY_SESSION)
 def export_data_json():
     """Exports all user data as a JSON string."""
     tables = [
@@ -54,7 +57,7 @@ def export_data_json():
     return json.dumps(data, indent=4)
 
 
-@st.cache_data
+@cached(category=CACHE_CATEGORY_SESSION)
 def export_data_csv_zip():
     """Exports assessments, appliances, and offset_transactions as CSVs in a ZIP archive."""
     tables_to_export = ["assessments", "appliances", "offset_transactions"]
@@ -145,21 +148,8 @@ def import_data_json(json_str, strategy='merge'):
 
         conn.commit()
 
-        # Invalidate cached read methods across data_io and database
-        export_data_json.clear()
-        export_data_csv_zip.clear()
-        if hasattr(database, "get_assessments") and hasattr(database.get_assessments, "clear"):
-            database.get_assessments.clear()
-            database.get_appliances.clear()
-            database.get_solar_config.clear()
-            database.get_user_challenges.clear()
-            database.get_total_xp.clear()
-            database.get_unlocked_badges.clear()
-            database.get_journey_profiles.clear()
-            database.get_offset_transactions.clear()
-            database.get_total_offsets.clear()
-            database.get_total_spend.clear()
-            database.get_water_assessments.clear()
+        invalidate_export_caches()
+        invalidate_all_db_caches()
 
         return True, "Data imported successfully!"
     except Exception as e:

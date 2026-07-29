@@ -4,19 +4,21 @@ import sqlite3
 import database as db
 
 # Use a test database
-db.DB_NAME = "test_eco_buddy.db"
+TEST_DB = "test_eco_buddy.db"
 
 @pytest.fixture(autouse=True)
 def setup_teardown():
-    db.DB_NAME = "test_eco_buddy.db"
+    original_db_name = db.DB_NAME
+    db.DB_NAME = TEST_DB
     # Setup
-    if os.path.exists(db.DB_NAME):
-        os.remove(db.DB_NAME)
+    if os.path.exists(TEST_DB):
+        os.remove(TEST_DB)
     db.init_energy_db()
     yield
     # Teardown
-    if os.path.exists(db.DB_NAME):
-        os.remove(db.DB_NAME)
+    db.DB_NAME = original_db_name
+    if os.path.exists(TEST_DB):
+        os.remove(TEST_DB)
 
 def test_add_and_get_appliance():
     # Test adding an appliance

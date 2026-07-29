@@ -1,28 +1,32 @@
 # water.py
 import streamlit as st
-from config import normalize_diet
+from config import GLOBAL_WATER_AVERAGE_LITERS, WATER_FACTORS, DIET_VIRTUAL_WATER, normalize_diet
+from cache import cached
+from cache_config import TTL_COMPUTED_ANALYTICS, CACHE_CATEGORY_COMPUTED
 
-GLOBAL_WATER_AVERAGE_LITERS = 3800.0
+def validate_water_inputs(shower_mins, laundry_loads, dishwasher_runs, garden_mins):
+    warnings = []
+    if shower_mins > 120:
+        warnings.append("Shower duration exceeds 2 hours — please verify your input.")
+    if laundry_loads > 30:
+        warnings.append("Laundry loads exceed 30 per week — please verify your input.")
+    if dishwasher_runs > 30:
+        warnings.append("Dishwasher runs exceed 30 per week — please verify your input.")
+    if garden_mins > 300:
+        warnings.append("Garden watering exceeds 5 hours per week — please verify your input.")
+    return warnings
 
-WATER_FACTORS = {
-    "shower_liter_per_min": 10.0,
-    "laundry_liter_per_load": 50.0,
-    "dishwasher_liter_per_run": 15.0,
-    "garden_liter_per_min": 20.0,
-}
 
-DIET_VIRTUAL_WATER = {
-    "Vegan": 2000.0,
-    "Vegetarian": 2500.0,
-    "Omnivore": 4000.0,
-    "Heavy Meat": 5000.0
-}
-
-@st.cache_data
+@cached(category=CACHE_CATEGORY_COMPUTED, ttl=TTL_COMPUTED_ANALYTICS)
 def calculate_water_footprint(shower_mins_per_day, laundry_loads_per_week, dishwasher_runs_per_week, garden_mins_per_week, diet):
     """
     Calculates the estimated daily water footprint in liters.
     """
+    shower_mins_per_day = max(0.0, float(shower_mins_per_day))
+    laundry_loads_per_week = max(0, int(laundry_loads_per_week))
+    dishwasher_runs_per_week = max(0, int(dishwasher_runs_per_week))
+    garden_mins_per_week = max(0.0, float(garden_mins_per_week))
+
     daily_shower = shower_mins_per_day * WATER_FACTORS["shower_liter_per_min"]
     daily_laundry = (laundry_loads_per_week * WATER_FACTORS["laundry_liter_per_load"]) / 7.0
     daily_dishwasher = (dishwasher_runs_per_week * WATER_FACTORS["dishwasher_liter_per_run"]) / 7.0

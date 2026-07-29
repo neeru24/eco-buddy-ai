@@ -1,5 +1,6 @@
 import pytest
-from recommendations import generate_recommendations
+from unittest.mock import patch
+from recommendations import generate_recommendations, generate_water_recommendations
 
 CONTRIBUTORS = {
     "Transport": 1533,
@@ -79,3 +80,221 @@ def test_recommendations_not_empty_for_all_green_profile():
         flights=0, contributors={"Transport": 0, "Electricity": 492, "Diet": 1000, "Flights": 0}
     )
     assert len(recommendations) > 0
+
+
+# Additional edge case tests
+
+def test_all_zero_contributors():
+    """Test behavior when all contributors are zero."""
+    _, recommendations = generate_recommendations(
+        transport="Bike", electricity=0, diet="Vegetarian",
+        flights=0, contributors={"Transport": 0, "Electricity": 0, "Diet": 0, "Flights": 0}
+    )
+    # Should still return recommendations
+    assert len(recommendations) > 0
+
+
+def test_equal_contributors():
+    """Test behavior when all contributors are equal."""
+    equal_contributors = {
+        "Transport": 1000,
+        "Electricity": 1000,
+        "Diet": 1000,
+        "Flights": 1000
+    }
+    insight, recommendations = generate_recommendations(
+        transport="Car", electricity=200, diet="Vegetarian",
+        flights=2, contributors=equal_contributors
+    )
+    assert len(recommendations) > 0
+    # Insight should mention one of the categories
+    assert any(cat in insight for cat in equal_contributors.keys())
+
+
+def test_single_contributor_only():
+    """Test behavior when only one contributor is present."""
+    single_contributor = {
+        "Transport": 2000,
+        "Electricity": 0,
+        "Diet": 0,
+        "Flights": 0
+    }
+    insight, recommendations = generate_recommendations(
+        transport="Car", electricity=100, diet="Vegetarian",
+        flights=0, contributors=single_contributor
+    )
+    assert "Transport" in insight
+
+
+def test_empty_contributors_dict():
+    """Test behavior with empty contributors dict."""
+    with pytest.raises(ValueError):
+        _, _ = generate_recommendations(
+            transport="Car", electricity=200, diet="Vegetarian",
+            flights=2, contributors={}
+        )
+
+
+def test_invalid_transport_mode():
+    """Test behavior with invalid transport mode."""
+    _, recommendations = generate_recommendations(
+        transport="Unknown Mode", electricity=200, diet="Vegetarian",
+        flights=2, contributors=CONTRIBUTORS
+    )
+    assert isinstance(recommendations, list)
+
+
+def test_invalid_diet_mode():
+    """Test behavior with invalid diet mode."""
+    _, recommendations = generate_recommendations(
+        transport="Car", electricity=200, diet="InvalidDiet",
+        flights=2, contributors=CONTRIBUTORS
+    )
+    assert isinstance(recommendations, list)
+
+
+def test_medium_electricity_level():
+    """Test behavior with medium electricity usage (between thresholds)."""
+    _, recommendations = generate_recommendations(
+        transport="Car", electricity=250, diet="Vegetarian",
+        flights=2, contributors=CONTRIBUTORS
+    )
+    combined = " ".join(recommendations)
+    assert isinstance(combined, str)
+    assert len(combined) > 0
+
+
+def test_medium_flights_level():
+    """Test behavior with medium flight usage (between thresholds)."""
+    _, recommendations = generate_recommendations(
+        transport="Car", electricity=200, diet="Vegetarian",
+        flights=3, contributors=CONTRIBUTORS
+    )
+    combined = " ".join(recommendations)
+    assert isinstance(combined, str)
+    assert len(combined) > 0
+
+
+# Water recommendations tests
+
+def test_water_recommendations_with_shower_priority():
+    """Test water recommendations when shower is the main consumer."""
+    contributors = {
+        "Shower": 150,
+        "Laundry": 40,
+        "Dishwasher": 30,
+        "Garden": 50
+    }
+    
+    insight, recommendations = generate_water_recommendations(
+        contributors=contributors,
+        total_daily=270,
+        diet="Omnivore"
+    )
+    
+    assert "shower" in insight.lower()
+    assert len(recommendations) > 0
+
+
+def test_water_recommendations_with_laundry_priority():
+    """Test water recommendations when laundry is the main consumer."""
+    contributors = {
+        "Shower": 80,
+        "Laundry": 80,
+        "Dishwasher": 30,
+        "Garden": 50
+    }
+    
+    insight, recommendations = generate_water_recommendations(
+        contributors=contributors,
+        total_daily=240,
+        diet="Vegetarian"
+    )
+    
+    assert "Laundry" in insight or "Garden" in insight or "Shower" in insight
+
+
+def test_water_recommendations_efficient_shower():
+    """Test water recommendations for efficient shower usage."""
+    contributors = {
+        "Shower": 50,
+        "Laundry": 30,
+        "Dishwasher": 20,
+        "Garden": 40
+    }
+    
+    _, recommendations = generate_water_recommendations(
+        contributors=contributors,
+        total_daily=140,
+        diet="Vegetarian"
+    )
+    
+    combined = " ".join(recommendations).lower()
+    assert "efficient" in combined or "keep it up" in combined
+
+
+def test_water_recommendations_high_garden_usage():
+    """Test water recommendations for high garden usage."""
+    contributors = {
+        "Shower": 80,
+        "Laundry": 40,
+        "Dishwasher": 30,
+        "Garden": 150
+    }
+    
+    _, recommendations = generate_water_recommendations(
+        contributors=contributors,
+        total_daily=300,
+        diet="Vegetarian"
+    )
+    
+    combined = " ".join(recommendations).lower()
+    assert "garden" in combined or "rainwater" in combined or "drought" in combined
+
+
+def test_water_recommendations_above_average():
+    """Test water recommendations when total is above average."""
+    contributors = {
+        "Shower": 120,
+        "Laundry": 60,
+        "Dishwasher": 40,
+        "Garden": 100
+    }
+    
+    insight, recommendations = generate_water_recommendations(
+        contributors=contributors,
+        total_daily=350,  # Above global average of 3800 L/year (~10.4 L/day)
+        diet="Vegetarian"
+    )
+    
+    combined = " ".join(recommendations).lower()
+    assert "above" in insight.lower() or "average" in insight.lower() or "above" in combined or "average" in combined
+
+
+def test_water_recommendations_with_meat_diet():
+    """Test water recommendations with meat-based diet."""
+    contributors = {
+        "Shower": 80,
+        "Laundry": 40,
+        "Dishwasher": 30,
+        "Garden": 50
+    }
+    
+    _, recommendations = generate_water_recommendations(
+        contributors=contributors,
+        total_daily=200,
+        diet="Omnivore"
+    )
+    
+    combined = " ".join(recommendations).lower()
+    assert "meat" in combined or "plant" in combined or "substitut" in combined
+
+
+def test_water_recommendations_empty_contributors():
+    """Test water recommendations with empty contributors."""
+    with pytest.raises(ValueError):
+        generate_water_recommendations(
+            contributors={},
+            total_daily=100,
+            diet="Vegetarian"
+        )

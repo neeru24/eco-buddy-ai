@@ -6,9 +6,10 @@ from streamlit_agraph import agraph, Node, Edge, Config
 from skill_tree_data import SKILL_TREE_NODES
 from gamification import evaluate_skill_tree, complete_skill_node
 from database import get_total_xp
-
 from styles.theme import apply_theme
+
 apply_theme()
+
 
 logger = logging.getLogger(__name__)
 
@@ -31,15 +32,31 @@ def load_total_xp(user_id):
         logger.exception("Failed to retrieve total XP for user %s", user_id)
         st.warning("XP information is currently unavailable.")
         return 0
+
 st.markdown(
     "<div class='section-header'>🌳 Eco-Action Roadmap</div>",
     unsafe_allow_html=True,
 )
 st.write(
+
     "Progress through the skill tree to unlock advanced sustainability practices and earn big rewards!"
 )
 
-USER_ID = 1
+    "Progress through the skill tree to unlock advanced sustainability "
+    "practices and earn big rewards!"
+)
+
+# Retrieve the currently authenticated user instead of using a hardcoded ID.
+user_id = st.session_state.get("user_id")
+
+if user_id is None:
+    st.warning("Please log in to access your skill tree.")
+    st.stop()
+
+
+# First evaluate current state (unlock nodes if prerequisites are met)
+node_status_map = evaluate_skill_tree(user_id)
+
 
 # Safely load skill tree progress
 try:
@@ -54,7 +71,13 @@ except Exception:
 
 # Initialize default status if no data exists
 if not node_status_map:
+
+if not node_status_map:
+    # If the user has never interacted, evaluate will return an empty dict,
+    # but we should at least unlock the ones with no prerequisites.
+
     node_status_map = {}
+
     for n_id, n_data in SKILL_TREE_NODES.items():
         if not n_data.get("prerequisites"):
             node_status_map[n_id] = "Unlocked"
@@ -64,6 +87,7 @@ if not node_status_map:
 
 def get_node_color(status):
     if status == "Completed":
+
         return "#4CAF50"
     elif status == "In Progress":
         return "#2196F3"
@@ -72,12 +96,24 @@ def get_node_color(status):
     else:
         return "#9E9E9E"
 
+        return "#4CAF50"  # Green
+    elif status == "In Progress":
+        return "#2196F3"  # Blue
+    elif status == "Unlocked":
+        return "#FFC107"  # Yellow
+    else:  # Locked
+        return "#9E9E9E"  # Gray
+
+
 
 nodes = []
 edges = []
 
 for node_id, node_data in SKILL_TREE_NODES.items():
     status = node_status_map.get(node_id, "Locked")
+
+
+    # For nodes with no prerequisites, if they are not in DB, they are Unlocked
 
     if status == "Locked" and not node_data.get("prerequisites"):
         status = "Unlocked"
@@ -112,13 +148,21 @@ config = Config(
     nodeHighlightBehavior=True,
     highlightColor="#F7A7A6",
     collapsible=False,
+
     direction="UD",
+
+    direction="UD",  # Up to down
+
 )
 
 col1, col2 = st.columns([2, 1])
 
 with col1:
-    return_value = agraph(nodes=nodes, edges=edges, config=config)
+    return_value = agraph(
+        nodes=nodes,
+        edges=edges,
+        config=config,
+    )
 
 with col2:
     if return_value:
@@ -136,6 +180,7 @@ with col2:
 
             if status == "Unlocked":
                 if st.button("Mark as Completed", type="primary"):
+
                     try:
                         success = complete_skill_node(USER_ID, return_value)
 
@@ -156,19 +201,44 @@ with col2:
                         )
                         st.error(
                             "An unexpected error occurred while completing the skill."
+
+                    success = complete_skill_node(user_id, return_value)
+
+                    if success:
+                        st.success(
+                            f"Completed! You earned "
+                            f"{selected_node['xp_reward']} XP."
+                        )
+                        st.balloons()
+                        st.rerun()
+                    else:
+                        st.error(
+                            "Could not complete the action. Please try again."
+
                         )
 
             elif status == "Locked":
                 st.warning(
+
                     "You must complete the prerequisite actions before unlocking this node."
                 )
 
     else:
         st.info(
             "Click on a node in the roadmap to view details and update your progress."
+
+                    "You must complete the prerequisite actions "
+                    "before unlocking this node."
+                )
+    else:
+        st.info(
+            "Click on a node in the roadmap to view details "
+            "and update your progress."
+
         )
 
 st.markdown("---")
+
 
 # Safely load total XP
 try:
@@ -177,5 +247,7 @@ except Exception:
     logger.exception("Failed to retrieve total XP for user %s", USER_ID)
     st.warning("XP information is currently unavailable.")
     total_xp = 0
+
+total_xp = get_total_xp(user_id)
 
 st.metric("Total XP", f"{total_xp} XP")

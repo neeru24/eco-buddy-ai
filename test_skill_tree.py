@@ -5,31 +5,26 @@ from database import DB_NAME, init_db, init_gamification_db, get_skill_tree_prog
 from gamification import evaluate_skill_tree, complete_skill_node
 from skill_tree_data import SKILL_TREE_NODES
 
+TEST_DB = "test_eco_buddy_skill.db"
+
 @pytest.fixture(autouse=True)
 def setup_db():
-    # Setup
-    init_db()
-    init_gamification_db()
-    # Ensure fresh state for user 1
-    conn = sqlite3.connect(DB_NAME)
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM skill_tree_progress WHERE user_id = 1")
-    cursor.execute("DELETE FROM xp_transactions WHERE user_id = 1")
-    conn.commit()
-    conn.close()
+    import database as db
+    old_db = db.DB_NAME
+    db.DB_NAME = TEST_DB
+    if os.path.exists(TEST_DB):
+        os.remove(TEST_DB)
+    db.init_db()
+    db.init_gamification_db()
     
     get_skill_tree_progress.clear()
     get_total_xp.clear()
     
     yield
     
-    # Teardown
-    conn = sqlite3.connect(DB_NAME)
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM skill_tree_progress WHERE user_id = 1")
-    cursor.execute("DELETE FROM xp_transactions WHERE user_id = 1")
-    conn.commit()
-    conn.close()
+    if os.path.exists(TEST_DB):
+        os.remove(TEST_DB)
+    db.DB_NAME = old_db
 
 def test_initial_evaluation():
     node_status = evaluate_skill_tree(1)

@@ -1,3 +1,4 @@
+import io
 import gpxpy
 import ijson
 import datetime
@@ -19,7 +20,6 @@ def parse_gpx(file_content_str):
 
 def parse_google_takeout_json(file_stream):
     waypoints = []
-    # ijson can stream items directly to avoid memory overload
     try:
         objects = ijson.items(file_stream, 'locations.item')
         for obj in objects:
@@ -55,13 +55,12 @@ def detect_transport_mode(avg_speed_kmh):
     elif avg_speed_kmh < 50:
         return "Public Transport"
     else:
-        return "Car"  # We'll map anything above to Car for now since Flying is treated differently in footprint
+        return "Car"
 
 def segment_trips(waypoints, time_threshold_minutes=30):
     if not waypoints:
         return []
     
-    # Sort waypoints by time
     waypoints = sorted(waypoints, key=lambda x: x["timestamp"])
     
     segments = []
@@ -76,7 +75,7 @@ def segment_trips(waypoints, time_threshold_minutes=30):
         if time_diff > time_threshold_minutes:
             if len(current_segment) > 1:
                 processed = process_segment(current_segment)
-                if processed["distance_km"] > 0.1:  # Only keep segments with some distance
+                if processed["distance_km"] > 0.1:
                     segments.append(processed)
             current_segment = [curr_wp]
         else:
@@ -111,3 +110,37 @@ def process_segment(segment_waypoints):
         "avg_speed_kmh": avg_speed,
         "waypoints": segment_waypoints
     }
+
+def parse_and_segment_file_bytes(file_bytes: bytes, filename: str, progress_callback=None):
+    """
+    Parses GPX or Google Takeout JSON bytes and segments trips in a background worker thread.
+    Thread-safe helper supporting optional progress callbacks.
+    """
+    if progress_callback:
+        progress_callback(0.1, "Reading file bytes...")
+
+    filename_lower = filename.lower()
+    if filename_lower.endswith(".gpx"):
+        content = file_bytes.decode("utf-8")
+        if progress_callback:
+            progress_callback(0.3, "Parsing GPX waypoints...")
+        waypoints = parse_gpx(content)
+    elif filename_lower.endswith(".json"):
+        if progress_callback:
+            progress_callback(0.3, "Parsing Google Takeout JSON...")
+        waypoints = parse_google_takeout_json(io.BytesIO(file_bytes))
+    else:
+        waypoints = []
+
+    if not waypoints:
+        return {"waypoints": [], "segments": [], "error": "No valid waypoints found."}
+
+    if progress_callback:
+        progress_callback(0.7, "Segmenting trips & calculating geodesic distances...")
+
+    segments = segment_trips(waypoints)
+
+    if progress_callback:
+        progress_callback(1.0, "Parsing and segmentation complete!")
+
+    return {"waypoints": waypoints, "segments": segments, "error": None}

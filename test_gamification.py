@@ -12,9 +12,12 @@ TEST_DB = "test_eco_buddy.db"
 
 @pytest.fixture(autouse=True)
 def setup_teardown():
+    original_db_name = db.DB_NAME
     db.DB_NAME = TEST_DB
+    db.init_db()
     db.init_gamification_db()
     yield
+    db.DB_NAME = original_db_name
     if os.path.exists(TEST_DB):
         os.remove(TEST_DB)
 

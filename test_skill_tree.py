@@ -77,3 +77,23 @@ def test_multiple_prerequisites():
     
     node_status = evaluate_skill_tree(1)
     assert node_status.get('plant_based_diet') == 'Unlocked'
+from unittest.mock import patch
+from pages.Skill_Tree import load_skill_tree, load_total_xp
+
+
+@patch("pages.Skill_Tree.evaluate_skill_tree")
+def test_load_skill_tree_error(mock_eval):
+    mock_eval.side_effect = RuntimeError("Database error")
+
+    result = load_skill_tree(1)
+
+    assert result == {}
+
+
+@patch("pages.Skill_Tree.get_total_xp")
+def test_load_total_xp_error(mock_xp):
+    mock_xp.side_effect = RuntimeError("Database error")
+
+    result = load_total_xp(1)
+
+    assert result == 0

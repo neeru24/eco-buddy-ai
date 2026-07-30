@@ -6,6 +6,10 @@ from config import DIET_TYPES, TRANSPORT_EMISSION_FACTORS, VALID_REGIONS
 
 class CarbonFootprintPlugin(CalculatorPlugin):
 
+    def __init__(self):
+        """Initialize recommendation cache."""
+        self._recommendation_cache = {}
+
     @property
     def name(self) -> str:
         return "carbon_footprint"
@@ -82,10 +86,19 @@ class CarbonFootprintPlugin(CalculatorPlugin):
             diet=diet,
             flights=flights,
             region=region,
-            return_audit=True
+            return_audit=True,
         )
+
         eco_score = calculate_eco_score(total_kg, contributors)
-        full_audit = generate_full_audit_log(transport, distance, electricity, diet, flights, region)
+
+        full_audit = generate_full_audit_log(
+            transport,
+            distance,
+            electricity,
+            diet,
+            flights,
+            region,
+        )
 
         return CalcResult(
             total=total_kg,
@@ -99,12 +112,24 @@ class CarbonFootprintPlugin(CalculatorPlugin):
                 "diet": diet,
                 "flights": flights,
                 "region": region,
-                "audit_log": full_audit
+                "audit_log": full_audit,
             },
         )
 
     def get_recommendations(self, result: CalcResult) -> list[str]:
         meta = result.metadata
+
+        cache_key = (
+            meta.get("transport"),
+            meta.get("electricity"),
+            meta.get("diet"),
+            meta.get("flights"),
+            tuple(sorted(result.contributors.items())),
+        )
+
+        if cache_key in self._recommendation_cache:
+            return self._recommendation_cache[cache_key]
+
         _, recs = generate_recommendations(
             transport=meta.get("transport", ""),
             electricity=meta.get("electricity", 0),
@@ -112,4 +137,6 @@ class CarbonFootprintPlugin(CalculatorPlugin):
             flights=meta.get("flights", 0),
             contributors=result.contributors,
         )
+
+        self._recommendation_cache[cache_key] = recs
         return recs

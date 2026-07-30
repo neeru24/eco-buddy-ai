@@ -2042,3 +2042,216 @@ def get_waste_assessments(user_id):
     finally:
         if conn:
             conn.close()
+
+
+# ---------------------------------------------------------------------------
+# Household composition
+# ---------------------------------------------------------------------------
+
+def init_household_db():
+    """
+    Create the household tables.
+
+    Follows the existing per-feature initializer pattern (init_energy_db,
+    init_gamification_db, init_marketplace_db, init_water_db).
+    """
+    conn = None
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS households (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL UNIQUE,
+                home_type TEXT DEFAULT 'Apartment',
+                home_size_sqm REAL,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS household_members (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                household_id INTEGER NOT NULL,
+                name TEXT NOT NULL,
+                age INTEGER NOT NULL,
+                is_dependent INTEGER NOT NULL DEFAULT 0,
+                custom_share REAL,
+                position INTEGER NOT NULL DEFAULT 0,
+                FOREIGN KEY (household_id) REFERENCES households(id) ON DELETE CASCADE
+            )
+        """)
+        # Members are always read back in their stored order, because the first
+        # member is the app's user and household.primary_share() depends on it.
+        cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_household_members_household
+            ON household_members(household_id, position)
+        """)
+        conn.commit()
+        return True
+    except sqlite3.Error as exc:
+        logger.error("Household init error: %s", exc)
+        return False
+    finally:
+        if conn:
+            conn.close()
+
+
+def save_household(user_id, members, home_type="Apartment", home_size_sqm=None):
+    """
+    Persist a user's household, replacing any previously saved one.
+
+    Members are rewritten wholesale rather than diffed: the list is short, and
+    a full replace keeps stored positions consistent with the in-memory order
+    that primary_share() relies on.
+    """
+    init_household_db()
+    conn = None
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "SELECT id FROM households WHERE user_id = ?", (user_id,)
+        )
+        row = cursor.fetchone()
+
+        if row:
+            household_id = row[0]
+            cursor.execute(
+                "UPDATE households SET home_type = ?, home_size_sqm = ?, "
+                "updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+                (home_type, home_size_sqm, household_id),
+            )
+            cursor.execute(
+                "DELETE FROM household_members WHERE household_id = ?", (household_id,)
+            )
+        else:
+            cursor.execute(
+                "INSERT INTO households (user_id, home_type, home_size_sqm) "
+                "VALUES (?, ?, ?)",
+                (user_id, home_type, home_size_sqm),
+            )
+            household_id = cursor.lastrowid
+
+        for position, member in enumerate(members or []):
+            cursor.execute(
+                "INSERT INTO household_members "
+                "(household_id, name, age, is_dependent, custom_share, position) "
+                "VALUES (?, ?, ?, ?, ?, ?)",
+                (
+                    household_id,
+                    member.get("name", "Unnamed"),
+                    int(member.get("age", 30)),
+                    int(bool(member.get("is_dependent", False))),
+                    member.get("custom_share"),
+                    position,
+                ),
+            )
+
+        conn.commit()
+        return household_id
+    except sqlite3.Error as exc:
+        logger.error("Unable to save household: %s", exc)
+        return None
+    finally:
+        if conn:
+            conn.close()
+
+
+def get_household(user_id):
+    """
+    Return a user's saved household, or None if they have not defined one.
+
+    Callers treat None as a single-occupant household, which is what keeps
+    per-capita allocation backward compatible for every existing user.
+    """
+    init_household_db()
+    conn = None
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT id, home_type, home_size_sqm FROM households WHERE user_id = ?",
+            (user_id,),
+        )
+        row = cursor.fetchone()
+        if not row:
+            return None
+
+        household_id, home_type, home_size_sqm = row
+        cursor.execute(
+            "SELECT id, name, age, is_dependent, custom_share "
+            "FROM household_members WHERE household_id = ? "
+            "ORDER BY position ASC, id ASC",
+            (household_id,),
+        )
+        members = [
+            {
+                "id": member_row[0],
+                "name": member_row[1],
+                "age": member_row[2],
+                "is_dependent": bool(member_row[3]),
+                "custom_share": member_row[4],
+            }
+            for member_row in cursor.fetchall()
+        ]
+        if not members:
+            return None
+
+        return {
+            "id": household_id,
+            "user_id": user_id,
+            "home_type": home_type,
+            "home_size_sqm": home_size_sqm,
+            "members": members,
+        }
+    except sqlite3.Error as exc:
+        logger.error("Unable to load household: %s", exc)
+        return None
+    finally:
+        if conn:
+            conn.close()
+
+
+def delete_household_member(member_id):
+    """Remove one member from a household."""
+    init_household_db()
+    conn = None
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM household_members WHERE id = ?", (member_id,))
+        deleted = cursor.rowcount > 0
+        conn.commit()
+        return deleted
+    except sqlite3.Error as exc:
+        logger.error("Unable to delete household member: %s", exc)
+        return False
+    finally:
+        if conn:
+            conn.close()
+
+
+def delete_household(user_id):
+    """Remove a user's household entirely, reverting them to solo occupancy."""
+    init_household_db()
+    conn = None
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        cursor.execute("SELECT id FROM households WHERE user_id = ?", (user_id,))
+        row = cursor.fetchone()
+        if not row:
+            return False
+        cursor.execute(
+            "DELETE FROM household_members WHERE household_id = ?", (row[0],)
+        )
+        cursor.execute("DELETE FROM households WHERE id = ?", (row[0],))
+        conn.commit()
+        return True
+    except sqlite3.Error as exc:
+        logger.error("Unable to delete household: %s", exc)
+        return False
+    finally:
+        if conn:
+            conn.close()

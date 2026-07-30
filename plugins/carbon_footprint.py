@@ -67,13 +67,36 @@ class CarbonFootprintPlugin(CalculatorPlugin):
             ),
         ]
 
+    def _to_float(self, value, field_name: str) -> float:
+        """Safely convert a value to float."""
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            raise ValueError(f"Invalid value for '{field_name}': {value}")
+
+    def _to_int(self, value, field_name: str) -> int:
+        """Safely convert a value to int."""
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            raise ValueError(f"Invalid value for '{field_name}': {value}")
+
+    def _to_str(self, value, field_name: str) -> str:
+        """Safely convert a value to string."""
+        if value is None:
+            raise ValueError(f"Invalid value for '{field_name}': {value}")
+        return str(value)
+
     def calculate(self, inputs: dict) -> CalcResult:
-        transport = inputs["transport"]
-        distance = inputs["distance"]
-        electricity = inputs["electricity"]
-        diet = inputs["diet"]
-        flights = inputs["flights"]
-        region = inputs.get("region", "Global")
+        try:
+            transport = self._to_str(inputs["transport"], "transport")
+            distance = self._to_float(inputs["distance"], "distance")
+            electricity = self._to_float(inputs["electricity"], "electricity")
+            diet = self._to_str(inputs["diet"], "diet")
+            flights = self._to_int(inputs["flights"], "flights")
+            region = self._to_str(inputs.get("region", "Global"), "region")
+        except KeyError as e:
+            raise ValueError(f"Missing required input: {e.args[0]}")
 
         total_kg, contributors, audit_log = calculate_footprint(
             transport=transport,
@@ -82,10 +105,19 @@ class CarbonFootprintPlugin(CalculatorPlugin):
             diet=diet,
             flights=flights,
             region=region,
-            return_audit=True
+            return_audit=True,
         )
+
         eco_score = calculate_eco_score(total_kg, contributors)
-        full_audit = generate_full_audit_log(transport, distance, electricity, diet, flights, region)
+
+        full_audit = generate_full_audit_log(
+            transport,
+            distance,
+            electricity,
+            diet,
+            flights,
+            region,
+        )
 
         return CalcResult(
             total=total_kg,
@@ -99,7 +131,7 @@ class CarbonFootprintPlugin(CalculatorPlugin):
                 "diet": diet,
                 "flights": flights,
                 "region": region,
-                "audit_log": full_audit
+                "audit_log": full_audit,
             },
         )
 

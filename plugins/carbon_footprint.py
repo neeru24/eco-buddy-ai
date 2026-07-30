@@ -68,6 +68,14 @@ class CarbonFootprintPlugin(CalculatorPlugin):
         ]
 
     def calculate(self, inputs: dict) -> CalcResult:
+        data = self._prepare_inputs(inputs)
+
+        transport = data["transport"]
+        distance = data["distance"]
+        electricity = data["electricity"]
+        diet = data["diet"]
+        flights = data["flights"]
+        region = data["region"]
         transport = inputs["transport"]
         distance = inputs["distance"]
         electricity = inputs["electricity"]
@@ -113,3 +121,14 @@ class CarbonFootprintPlugin(CalculatorPlugin):
             contributors=result.contributors,
         )
         return recs
+def _prepare_inputs(self, inputs: dict) -> dict:
+    defaults = {
+        "transport": "Car",
+        "distance": 20.0,
+        "electricity": 250.0,
+        "diet": "Vegetarian",
+        "flights": 0,
+        "region": "Global",
+    }
+
+    return {key: inputs.get(key, value) for key, value in defaults.items()}

@@ -1250,7 +1250,7 @@ placeholder.empty()
 
         progress_text.info("🔍 Validating user inputs...")
         progress.progress(20)
-        time.sleep(0.5)  # Simulate validation delay
+
 
 # TABS CONFIGURATION
 # -------------------------

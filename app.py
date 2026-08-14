@@ -8,11 +8,38 @@ from styles.skeleton import show_card_skeleton, show_chart_skeleton
 setup_logging()
 logger = logging.getLogger(__name__)
 
-st.set_page_config(    page_title="EcoBuddy",
-    page_icon="🌱",
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
+
+def _apply_page_config(**kwargs):
+    """Apply page config defensively.
+
+    Validates theme/page_config settings before passing them to Streamlit and
+    falls back to safe defaults if anything is invalid or Streamlit rejects the
+    call, so a bad config can never stop the app from loading.
+    """
+    defaults = {
+        "page_title": "EcoBuddy",
+        "page_icon": "🌱",
+        "layout": "wide",
+        "initial_sidebar_state": "expanded",
+    }
+    settings = {
+        key: (kwargs.get(key) if kwargs.get(key) is not None else default)
+        for key, default in defaults.items()
+    }
+    if settings["layout"] not in ("centered", "wide"):
+        settings["layout"] = defaults["layout"]
+    if settings["initial_sidebar_state"] not in ("auto", "expanded", "collapsed"):
+        settings["initial_sidebar_state"] = defaults["initial_sidebar_state"]
+    if not settings["page_title"]:
+        settings["page_title"] = defaults["page_title"]
+    try:
+        st.set_page_config(**settings)
+    except Exception:
+        # Let Streamlit use its own defaults rather than crashing startup.
+        logger.warning("set_page_config failed with %r; using Streamlit defaults", settings)
+
+
+_apply_page_config()
 from eco_school import render_eco_school_hub
 import tempfile
 import uuid
@@ -230,7 +257,7 @@ with form:
                         help="Enter your registered username."
                     )
 
-                    st.caption(f"👤 {len(username)}/{MAX_USERNAME} characters")
+                    st.caption(f"👤 {len(username or '')}/{MAX_USERNAME} characters")
 
                     password = st.text_input("Password", type="password",
                     help="Enter your account password. Characters will be hidden for security.")
@@ -254,7 +281,7 @@ with form:
                         help="Choose a unique username."
                     )
 
-                    st.caption(f"👤 {len(username)}/{MAX_USERNAME} characters")
+                    st.caption(f"👤 {len(username or '')}/{MAX_USERNAME} characters")
                     MAX_EMAIL = 100
 
                     email = st.text_input(
@@ -263,7 +290,7 @@ with form:
                         help="Enter a valid email address."
                     )
 
-                    st.caption(f"📧 {len(email)}/{MAX_EMAIL} characters")
+                    st.caption(f"📧 {len(email or '')}/{MAX_EMAIL} characters")
                     password = st.text_input("Password", type="password",help="Use a strong password with letters, numbers, and special characters.")
                     anonymous = st.checkbox("Appear anonymously on leaderboard")
                     if st.form_submit_button("Register"):
@@ -1055,13 +1082,13 @@ with st.expander("🌍 Environmental Impact Timeline", expanded=False):
         transport = st.selectbox(
         "Primary Transport",
         ["Car", "Public Transport", "Bike", "Walking"],
-        key="transport",
+        key="transport_quick",
         help="Select the mode of transportation you use most frequently for your daily commute."
         )
         diet = st.selectbox(
         "Diet Type",
         ["Vegetarian", "Non-Vegetarian"],
-        key="diet",
+        key="diet_quick",
         help="Choose the option that best represents your regular dietary habits."
     )
 
@@ -1077,14 +1104,14 @@ with st.expander("🌍 Environmental Impact Timeline", expanded=False):
             min_value=0.0,
             value=200.0,
             step=10.0,
-            key="electricity",
+            key="electricity_quick",
             help="Enter your average monthly electricity consumption in kWh."
         )
 
         diet = st.selectbox(
         "Diet Type",
         ["Vegetarian", "Non-Vegetarian"],
-        key="diet",
+        key="diet_quick2",
         help="Choose the option that best represents your regular dietary habits."
     )
     with col3:
@@ -1495,8 +1522,9 @@ with tab1:
         if uploaded_bill is not None:
             # We use a button to trigger extraction so it doesn't re-run infinitely on every interaction
             if st.button("Extract Energy Usage"):
-                with st.spinner("Extracting data from bill..."):
-                    from ocr_utils import extract_text_from_file, parse_energy_consumption
+                try:
+                    with st.spinner("Extracting data from bill..."):
+                        from ocr_utils import extract_text_from_file, parse_energy_consumption
                     extracted_text = extract_text_from_file(uploaded_bill)
                     parsed_val = parse_energy_consumption(extracted_text)
                     if parsed_val is not None:

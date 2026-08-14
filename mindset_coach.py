@@ -1,9 +1,3 @@
-
----
-
-## NEW CODE: mindset_coach.py
-
-```python
 # ============================================================
 # FILE: mindset_coach.py
 # EcoBuddy AI+ Eco-Mindset & Behavioral Change Coach
@@ -581,18 +575,3 @@ def render_coach_progress():
 def render_coach_hub():
     """Render the complete coach hub"""
     render_mindset_coach()
-
-# ============================================================
-# SAMPLE USAGE
-# ============================================================
-
-"""
-# Add to app.py:
-
-# Import
-from mindset_coach import render_coach_hub
-
-# Add as a new tab
-with tab29:
-    render_coach_hub()
-"""

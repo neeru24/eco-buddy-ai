@@ -90,7 +90,7 @@ def render_widget(widget_id: str, user_id: str = None):
 def render_widget_customizer(user_id: int) -> list[str]:
     """Render the sidebar widget picker and persist explicit saves."""
     if SESSION_KEY not in st.session_state:
-        st.session_state[SESSION_KEY] = load_widget_preferences(user_id)
+        st.session_state[SESSION_KEY] = get_user_widgets(user_id)
 
     with st.sidebar.expander("🧩 Dashboard widgets", expanded=False):
         st.caption("Choose which cards appear on your personal dashboard.")
@@ -188,8 +188,8 @@ def render_customizable_dashboard(user_id: int, selected_widgets: Iterable[str])
                     st.metric("Energy Used", f"{latest.get('energy_used', 0):.1f} kWh")
                 with col3:
                     st.metric("Waste Generated", f"{latest.get('waste_generated', 0):.1f} kg")
-        else:
-            st.info("No assessments found. Start tracking your impact!")
+            else:
+                st.info("No assessments found. Start tracking your impact!")
     
     elif widget_id == "eco_score":
         st.subheader("🌱 Eco Score")

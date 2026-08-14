@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import streamlit as st
 
@@ -455,18 +456,27 @@ def _load_theme():
     return DEFAULT_THEME
 
 
+def _validate_theme(name):
+    """Return ``name`` if it is a known theme, otherwise the default theme."""
+    if name in THEMES:
+        return name
+    return DEFAULT_THEME
+
+
 from session_state_utils import ensure_session_state
 
 
 def _ensure_theme_state():
     if "theme" not in st.session_state:
-        st.session_state.theme = _load_theme()
+        st.session_state.theme = _validate_theme(_load_theme())
+    else:
+        st.session_state.theme = _validate_theme(st.session_state.theme)
 
 
 def render_theme_selector():
     _ensure_theme_state()
 
-    current = st.session_state.theme
+    current = _validate_theme(st.session_state.theme)
     options = [f"{THEMES[k]['icon']} {THEMES[k]['name']}" for k in VALID_THEMES]
     labels_by_name = {f"{THEMES[k]['icon']} {THEMES[k]['name']}": k for k in VALID_THEMES}
     current_label = f"{THEMES[current]['icon']} {THEMES[current]['name']}"
@@ -485,15 +495,7 @@ def render_theme_selector():
         st.rerun()
 
 
-def apply_theme():
-    _ensure_theme_state()
-
-    theme_name = st.session_state.get("theme", DEFAULT_THEME)
-    if theme_name not in THEMES:
-        theme_name = DEFAULT_THEME
-
-    css = THEMES[theme_name]["css"]
-
+def _inject_theme_css(css):
     st.markdown(f"""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -783,15 +785,15 @@ def apply_theme():
             transform: none;
         }}
 
-        .stExpander {
+        .stExpander {{
     border-radius: 14px;
     border: 1px solid rgba(74,222,128,.25);
     transition: all .3s ease;
-}
+}}
 
-.stExpander:hover {
+.stExpander:hover {{
     transform: translateY(-2px);
-}
+}}
 
         .input-section,
         .card,
@@ -853,6 +855,26 @@ def apply_theme():
 </style>
 
 """, unsafe_allow_html=True)
+
+
+def apply_theme():
+    _ensure_theme_state()
+
+    theme_name = _validate_theme(st.session_state.get("theme", DEFAULT_THEME))
+    css = THEMES[theme_name].get("css", "")
+    if not css:
+        # Nothing to inject; Streamlit's default theme takes over.
+        return
+
+    try:
+        _inject_theme_css(css)
+    except Exception:
+        # A theme failure must never stop the app from rendering. Fall back to
+        # Streamlit's default theme instead of crashing.
+        logging.getLogger(__name__).warning(
+            "apply_theme: could not render theme %r; using Streamlit default theme",
+            theme_name,
+        )
 
 
 def render_empty_state(icon, title, message):

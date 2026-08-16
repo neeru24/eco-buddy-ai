@@ -1,0 +1,275 @@
+{
+  "metadata": {
+    "description": "Benchmark datasets for emission calculations - Issue #222",
+    "created_date": "2026-07-28",
+    "purpose": "Verify emission calculations remain stable after future updates",
+    "static_factors": {
+      "electricity": 0.82,
+      "flight": 250.0,
+      "transport_factors": {
+        "Car": 0.21,
+        "Bike": 0.0,
+        "Public Transport": 0.08,
+        "Walking": 0.0
+      },
+      "diet_factors": {
+        "Vegetarian": 1000,
+        "Non-Vegetarian": 1800
+      }
+    }
+  },
+  "datasets": {
+    "low_emission_scenarios": [
+      {
+        "name": "eco_friendly_commuter",
+        "description": "Low emission lifestyle with eco-friendly transportation and diet",
+        "inputs": {
+          "transport": "Bike",
+          "distance": 5,
+          "electricity": 100,
+          "diet": "Vegetarian",
+          "flights": 0,
+          "region": "Global"
+        },
+        "expected_output": {
+          "total": 1984.0,
+          "contributors": {
+            "Transport": 0.0,
+            "Electricity": 984.0,
+            "Diet": 1000,
+            "Flights": 0.0
+          },
+          "eco_score": 77
+        }
+      },
+      {
+        "name": "minimal_impact",
+        "description": "Minimal environmental impact with walking and low electricity",
+        "inputs": {
+          "transport": "Walking",
+          "distance": 2,
+          "electricity": 50,
+          "diet": "Vegetarian",
+          "flights": 0,
+          "region": "EU"
+        },
+        "expected_output": {
+          "total": 1492.0,
+          "contributors": {
+            "Transport": 0.0,
+            "Electricity": 492.0,
+            "Diet": 1000,
+            "Flights": 0.0
+          },
+          "eco_score": 84
+        }
+      }
+    ],
+    "medium_emission_scenarios": [
+      {
+        "name": "average_urban_commuter",
+        "description": "Average urban lifestyle with public transport and mixed diet",
+        "inputs": {
+          "transport": "Public Transport",
+          "distance": 15,
+          "electricity": 250,
+          "diet": "Vegetarian",
+          "flights": 1,
+          "region": "US"
+        },
+        "expected_output": {
+          "total": 4148.0,
+          "contributors": {
+            "Transport": 438.0,
+            "Electricity": 2460.0,
+            "Diet": 1000,
+            "Flights": 250.0
+          },
+          "eco_score": 54
+        }
+      },
+      {
+        "name": "balanced_lifestyle",
+        "description": "Balanced lifestyle with occasional car use and non-vegetarian diet",
+        "inputs": {
+          "transport": "Car",
+          "distance": 10,
+          "electricity": 180,
+          "diet": "Non-Vegetarian",
+          "flights": 2,
+          "region": "UK"
+        },
+        "expected_output": {
+          "total": 4837.7,
+          "contributors": {
+            "Transport": 766.5,
+            "Electricity": 1771.2,
+            "Diet": 1800,
+            "Flights": 500.0
+          },
+          "eco_score": 39
+        }
+      }
+    ],
+    "high_emission_scenarios": [
+      {
+        "name": "frequent_flyer",
+        "description": "High emission lifestyle with frequent flying and high electricity use",
+        "inputs": {
+          "transport": "Car",
+          "distance": 40,
+          "electricity": 500,
+          "diet": "Non-Vegetarian",
+          "flights": 12,
+          "region": "Global"
+        },
+        "expected_output": {
+          "total": 12786.0,
+          "contributors": {
+            "Transport": 3066.0,
+            "Electricity": 4920.0,
+            "Diet": 1800,
+            "Flights": 3000.0
+          },
+          "eco_score": 1
+        }
+      },
+      {
+        "name": "maximum_values",
+        "description": "Maximum allowed input values to test upper bounds",
+        "inputs": {
+          "transport": "Car",
+          "distance": 500,
+          "electricity": 10000,
+          "diet": "Non-Vegetarian",
+          "flights": 365,
+          "region": "Global"
+        },
+        "expected_output": {
+          "total": 229775.0,
+          "contributors": {
+            "Transport": 38325.0,
+            "Electricity": 98400.0,
+            "Diet": 1800,
+            "Flights": 91250.0
+          },
+          "eco_score": 1
+        }
+      }
+    ],
+    "edge_cases": [
+      {
+        "name": "zero_values",
+        "description": "All zero values to test lower bounds",
+        "inputs": {
+          "transport": "Walking",
+          "distance": 0,
+          "electricity": 0,
+          "diet": "Vegetarian",
+          "flights": 0,
+          "region": "Global"
+        },
+        "expected_output": {
+          "total": 1000.0,
+          "contributors": {
+            "Transport": 0.0,
+            "Electricity": 0.0,
+            "Diet": 1000,
+            "Flights": 0.0
+          },
+          "eco_score": 86
+        }
+      },
+      {
+        "name": "diet_normalization",
+        "description": "Test diet normalization with various input formats",
+        "inputs": {
+          "transport": "Bike",
+          "distance": 10,
+          "electricity": 150,
+          "diet": "non-veg",
+          "flights": 0,
+          "region": "Global"
+        },
+        "expected_output": {
+          "total": 3276.0,
+          "contributors": {
+            "Transport": 0.0,
+            "Electricity": 1476.0,
+            "Diet": 1800,
+            "Flights": 0.0
+          },
+          "eco_score": 54
+        }
+      },
+      {
+        "name": "invalid_region_fallback",
+        "description": "Test invalid region falls back to Global",
+        "inputs": {
+          "transport": "Car",
+          "distance": 20,
+          "electricity": 200,
+          "diet": "Vegetarian",
+          "flights": 1,
+          "region": "INVALID_REGION"
+        },
+        "expected_output": {
+          "total": 4751.0,
+          "contributors": {
+            "Transport": 1533.0,
+            "Electricity": 1968.0,
+            "Diet": 1000,
+            "Flights": 250.0
+          },
+          "eco_score": 36
+        }
+      }
+    ],
+    "regression_tests": [
+      {
+        "name": "existing_test_case_1",
+        "description": "Replicates existing test case from test_emissions.py",
+        "inputs": {
+          "transport": "Car",
+          "distance": 20,
+          "electricity": 250,
+          "diet": "Non-Vegetarian",
+          "flights": 2,
+          "region": "US"
+        },
+        "expected_output": {
+          "total": 6293.0,
+          "contributors": {
+            "Transport": 1533.0,
+            "Electricity": 2460.0,
+            "Diet": 1800,
+            "Flights": 500.0
+          },
+          "eco_score": 19
+        }
+      },
+      {
+        "name": "eco_score_calibration",
+        "description": "Test cases for eco score calculation verification",
+        "inputs": {
+          "transport": "Car",
+          "distance": 15,
+          "electricity": 300,
+          "diet": "Vegetarian",
+          "flights": 4,
+          "region": "Global"
+        },
+        "expected_output": {
+          "total": 6101.75,
+          "contributors": {
+            "Transport": 1149.75,
+            "Electricity": 2952.0,
+            "Diet": 1000,
+            "Flights": 1000.0
+          },
+          "eco_score": 30
+        }
+      }
+    ]
+  }
+}

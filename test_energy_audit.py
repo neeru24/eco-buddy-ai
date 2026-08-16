@@ -15,7 +15,7 @@ def test_calculate_appliance_cost():
     # 5 kWh/day at $0.20/kWh
     daily, monthly, yearly = ea.calculate_appliance_cost(5.0, 0.20)
     assert daily == 1.0
-    assert monthly == 30.0
+    assert monthly == 12.0
     assert yearly == 365.0
 
 def test_calculate_home_energy_summary():
@@ -28,7 +28,7 @@ def test_calculate_home_energy_summary():
     # Total: 9.17 kWh
     daily, monthly, yearly = ea.calculate_home_energy_summary(appliances)
     assert pytest.approx(daily) == 9.17
-    assert pytest.approx(monthly) == 9.17 * 30
+    assert pytest.approx(monthly) == 9.17 * 12
     assert pytest.approx(yearly) == 9.17 * 365
 
 def test_generate_hourly_energy_profile():

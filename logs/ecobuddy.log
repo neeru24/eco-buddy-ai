@@ -1,0 +1,6 @@
+2026-08-14 23:19:43,678 | ERROR | database | operation_id=- | Database draft read error: no such column: created_at
+2026-08-14 23:20:03,878 | ERROR | database | operation_id=- | Database draft read error: no such column: created_at
+2026-08-14 23:22:20,109 | ERROR | database | operation_id=- | Database draft read error: no such column: created_at
+2026-08-14 23:22:37,187 | ERROR | database | operation_id=- | Database draft read error: no such column: created_at
+2026-08-14 23:22:58,072 | ERROR | database | operation_id=- | Database draft read error: no such column: created_at
+2026-08-14 23:23:00,759 | ERROR | database | operation_id=- | Database draft read error: no such column: created_at

@@ -1,0 +1,434 @@
+{
+  "generated_at": "20260730_182102",
+  "suites": [
+    {
+      "suite": "Emissions Calculations",
+      "timestamp": "2026-07-30T18:20:46.601000+00:00",
+      "iterations": 10,
+      "python_version": "3.11.15",
+      "platform": "Linux-6.17.0-1020-azure-x86_64-with-glibc2.39",
+      "benchmarks": [
+        {
+          "name": "calculate_footprint \u2013 Car/Non-Veg",
+          "iterations": 10,
+          "min_ms": 0.3442,
+          "max_ms": 0.4354,
+          "mean_ms": 0.3882,
+          "median_ms": 0.385,
+          "stdev_ms": 0.0315,
+          "peak_memory_kb": 26.6,
+          "error": null
+        },
+        {
+          "name": "calculate_footprint \u2013 Walking/Vegetarian",
+          "iterations": 10,
+          "min_ms": 0.3402,
+          "max_ms": 0.4047,
+          "mean_ms": 0.3648,
+          "median_ms": 0.356,
+          "stdev_ms": 0.0218,
+          "peak_memory_kb": 26.59,
+          "error": null
+        },
+        {
+          "name": "calculate_footprint \u2013 max values",
+          "iterations": 10,
+          "min_ms": 0.3412,
+          "max_ms": 0.4113,
+          "mean_ms": 0.362,
+          "median_ms": 0.3551,
+          "stdev_ms": 0.0205,
+          "peak_memory_kb": 26.59,
+          "error": null
+        },
+        {
+          "name": "calculate_footprint \u2013 Public Transport",
+          "iterations": 10,
+          "min_ms": 0.3378,
+          "max_ms": 0.3779,
+          "mean_ms": 0.3591,
+          "median_ms": 0.358,
+          "stdev_ms": 0.0125,
+          "peak_memory_kb": 26.59,
+          "error": null
+        },
+        {
+          "name": "calculate_eco_score \u2013 overall",
+          "iterations": 10,
+          "min_ms": 0.0126,
+          "max_ms": 0.0148,
+          "mean_ms": 0.0137,
+          "median_ms": 0.0138,
+          "stdev_ms": 0.0008,
+          "peak_memory_kb": 0.45,
+          "error": null
+        },
+        {
+          "name": "calculate_eco_score \u2013 weighted",
+          "iterations": 10,
+          "min_ms": 0.0129,
+          "max_ms": 0.0158,
+          "mean_ms": 0.0141,
+          "median_ms": 0.0142,
+          "stdev_ms": 0.0009,
+          "peak_memory_kb": 1.04,
+          "error": null
+        },
+        {
+          "name": "fetch_emission_factors \u2013 static fallback",
+          "iterations": 10,
+          "min_ms": 0.0104,
+          "max_ms": 0.0202,
+          "mean_ms": 0.0136,
+          "median_ms": 0.0119,
+          "stdev_ms": 0.0036,
+          "peak_memory_kb": 0.76,
+          "error": null
+        },
+        {
+          "name": "normalize_diet \u2013 9 inputs",
+          "iterations": 10,
+          "min_ms": 0.0081,
+          "max_ms": 0.011,
+          "mean_ms": 0.009,
+          "median_ms": 0.0087,
+          "stdev_ms": 0.001,
+          "peak_memory_kb": 0.32,
+          "error": null
+        }
+      ]
+    },
+    {
+      "suite": "OCR Processing",
+      "timestamp": "2026-07-30T18:20:46.825622+00:00",
+      "iterations": 10,
+      "python_version": "3.11.15",
+      "platform": "Linux-6.17.0-1020-azure-x86_64-with-glibc2.39",
+      "benchmarks": [
+        {
+          "name": "parse_energy_consumption \u2013 simple kWh",
+          "iterations": 10,
+          "min_ms": 0.0144,
+          "max_ms": 0.0221,
+          "mean_ms": 0.0179,
+          "median_ms": 0.0179,
+          "stdev_ms": 0.0024,
+          "peak_memory_kb": 1.23,
+          "error": null
+        },
+        {
+          "name": "parse_energy_consumption \u2013 labelled",
+          "iterations": 10,
+          "min_ms": 0.0137,
+          "max_ms": 0.0161,
+          "mean_ms": 0.0146,
+          "median_ms": 0.0143,
+          "stdev_ms": 0.0008,
+          "peak_memory_kb": 1.23,
+          "error": null
+        },
+        {
+          "name": "parse_energy_consumption \u2013 comma number",
+          "iterations": 10,
+          "min_ms": 0.0128,
+          "max_ms": 0.0166,
+          "mean_ms": 0.0138,
+          "median_ms": 0.0135,
+          "stdev_ms": 0.0011,
+          "peak_memory_kb": 1.23,
+          "error": null
+        },
+        {
+          "name": "parse_energy_consumption \u2013 multi-line bill",
+          "iterations": 10,
+          "min_ms": 0.0175,
+          "max_ms": 0.0194,
+          "mean_ms": 0.0183,
+          "median_ms": 0.0182,
+          "stdev_ms": 0.0006,
+          "peak_memory_kb": 1.26,
+          "error": null
+        },
+        {
+          "name": "parse_energy_consumption \u2013 no match",
+          "iterations": 10,
+          "min_ms": 0.0167,
+          "max_ms": 0.0194,
+          "mean_ms": 0.0178,
+          "median_ms": 0.0175,
+          "stdev_ms": 0.001,
+          "peak_memory_kb": 1.18,
+          "error": null
+        },
+        {
+          "name": "parse_energy_consumption \u2013 empty",
+          "iterations": 10,
+          "min_ms": 0.0034,
+          "max_ms": 0.0047,
+          "mean_ms": 0.0038,
+          "median_ms": 0.0037,
+          "stdev_ms": 0.0004,
+          "peak_memory_kb": 0.0,
+          "error": null
+        },
+        {
+          "name": "parse_energy_consumption \u2013 None",
+          "iterations": 10,
+          "min_ms": 0.0032,
+          "max_ms": 0.0037,
+          "mean_ms": 0.0034,
+          "median_ms": 0.0033,
+          "stdev_ms": 0.0002,
+          "peak_memory_kb": 0.0,
+          "error": null
+        },
+        {
+          "name": "parse_energy_consumption \u2013 batch 50 pages",
+          "iterations": 10,
+          "min_ms": 0.1362,
+          "max_ms": 0.159,
+          "mean_ms": 0.1439,
+          "median_ms": 0.1424,
+          "stdev_ms": 0.0068,
+          "peak_memory_kb": 1.86,
+          "error": null
+        },
+        {
+          "name": "extract_text_from_file \u2013 PDF (mocked)",
+          "iterations": 10,
+          "min_ms": 1.0963,
+          "max_ms": 1.2321,
+          "mean_ms": 1.1657,
+          "median_ms": 1.1653,
+          "stdev_ms": 0.0425,
+          "peak_memory_kb": 124.17,
+          "error": null
+        },
+        {
+          "name": "extract_text_from_file \u2013 image (mocked)",
+          "iterations": 10,
+          "min_ms": 3.1773,
+          "max_ms": 3.5668,
+          "mean_ms": 3.3185,
+          "median_ms": 3.2881,
+          "stdev_ms": 0.1179,
+          "peak_memory_kb": 53.12,
+          "error": null
+        }
+      ]
+    },
+    {
+      "suite": "Report Generation",
+      "timestamp": "2026-07-30T18:20:47.156823+00:00",
+      "iterations": 10,
+      "python_version": "3.11.15",
+      "platform": "Linux-6.17.0-1020-azure-x86_64-with-glibc2.39",
+      "benchmarks": [
+        {
+          "name": "generate_pdf \u2013 short insight",
+          "iterations": 10,
+          "min_ms": 0.0461,
+          "max_ms": 0.0759,
+          "mean_ms": 0.0566,
+          "median_ms": 0.0538,
+          "stdev_ms": 0.0098,
+          "peak_memory_kb": 1.08,
+          "error": null
+        },
+        {
+          "name": "generate_pdf \u2013 long insight",
+          "iterations": 10,
+          "min_ms": 0.0469,
+          "max_ms": 0.0534,
+          "mean_ms": 0.0485,
+          "median_ms": 0.048,
+          "stdev_ms": 0.0018,
+          "peak_memory_kb": 1.92,
+          "error": null
+        },
+        {
+          "name": "generate_pdf \u2013 score 100",
+          "iterations": 10,
+          "min_ms": 0.0441,
+          "max_ms": 0.0578,
+          "mean_ms": 0.0478,
+          "median_ms": 0.0455,
+          "stdev_ms": 0.0053,
+          "peak_memory_kb": 0.83,
+          "error": null
+        },
+        {
+          "name": "generate_pdf \u2013 score 1",
+          "iterations": 10,
+          "min_ms": 0.0395,
+          "max_ms": 0.0812,
+          "mean_ms": 0.0455,
+          "median_ms": 0.0411,
+          "stdev_ms": 0.0126,
+          "peak_memory_kb": 0.83,
+          "error": null
+        },
+        {
+          "name": "generate_pdf \u2013 unicode insight",
+          "iterations": 10,
+          "min_ms": 0.0412,
+          "max_ms": 0.0444,
+          "mean_ms": 0.0427,
+          "median_ms": 0.0423,
+          "stdev_ms": 0.0011,
+          "peak_memory_kb": 0.9,
+          "error": null
+        },
+        {
+          "name": "generate_pdf \u2013 batch 8 reports",
+          "iterations": 10,
+          "min_ms": 0.1072,
+          "max_ms": 0.1425,
+          "mean_ms": 0.1167,
+          "median_ms": 0.1114,
+          "stdev_ms": 0.0122,
+          "peak_memory_kb": 1.78,
+          "error": null
+        }
+      ]
+    },
+    {
+      "suite": "Database Operations",
+      "timestamp": "2026-07-30T18:20:47.337627+00:00",
+      "iterations": 10,
+      "python_version": "3.11.15",
+      "platform": "Linux-6.17.0-1020-azure-x86_64-with-glibc2.39",
+      "benchmarks": [
+        {
+          "name": "init_db \u2013 schema creation",
+          "iterations": 10,
+          "min_ms": 39.1606,
+          "max_ms": 66.9795,
+          "mean_ms": 46.0317,
+          "median_ms": 41.9689,
+          "stdev_ms": 10.133,
+          "peak_memory_kb": 9.79,
+          "error": null
+        },
+        {
+          "name": "create_user \u2013 bcrypt hash",
+          "iterations": 10,
+          "min_ms": 286.3305,
+          "max_ms": 290.9498,
+          "mean_ms": 288.8048,
+          "median_ms": 288.7476,
+          "stdev_ms": 1.3908,
+          "peak_memory_kb": 1.72,
+          "error": null
+        },
+        {
+          "name": "verify_user \u2013 bcrypt check",
+          "iterations": 10,
+          "min_ms": 288.9807,
+          "max_ms": 292.3411,
+          "mean_ms": 290.8687,
+          "median_ms": 290.9913,
+          "stdev_ms": 1.0338,
+          "peak_memory_kb": 1.56,
+          "error": null
+        },
+        {
+          "name": "save_assessment \u2013 single insert",
+          "iterations": 10,
+          "min_ms": 10.2412,
+          "max_ms": 91.5807,
+          "mean_ms": 44.1633,
+          "median_ms": 38.1122,
+          "stdev_ms": 29.212,
+          "peak_memory_kb": 1.42,
+          "error": null
+        },
+        {
+          "name": "get_assessments \u2013 20 rows",
+          "iterations": 10,
+          "min_ms": 0.3741,
+          "max_ms": 0.4288,
+          "mean_ms": 0.3995,
+          "median_ms": 0.3999,
+          "stdev_ms": 0.0168,
+          "peak_memory_kb": 7.59,
+          "error": null
+        },
+        {
+          "name": "save_assessment \u2013 bulk 50 inserts",
+          "iterations": 10,
+          "min_ms": 71.2288,
+          "max_ms": 110.7512,
+          "mean_ms": 85.7717,
+          "median_ms": 80.9074,
+          "stdev_ms": 14.4875,
+          "peak_memory_kb": 2.09,
+          "error": null
+        },
+        {
+          "name": "get_assessments \u2013 50+ rows",
+          "iterations": 10,
+          "min_ms": 1.3479,
+          "max_ms": 1.4274,
+          "mean_ms": 1.3778,
+          "median_ms": 1.3702,
+          "stdev_ms": 0.0255,
+          "peak_memory_kb": 174.77,
+          "error": null
+        },
+        {
+          "name": "add_appliance \u2013 single insert",
+          "iterations": 10,
+          "min_ms": 1.6153,
+          "max_ms": 2.0169,
+          "mean_ms": 1.772,
+          "median_ms": 1.7545,
+          "stdev_ms": 0.1305,
+          "peak_memory_kb": 1.32,
+          "error": null
+        },
+        {
+          "name": "get_appliances \u2013 6 rows",
+          "iterations": 10,
+          "min_ms": 0.3768,
+          "max_ms": 0.436,
+          "mean_ms": 0.3996,
+          "median_ms": 0.3925,
+          "stdev_ms": 0.0182,
+          "peak_memory_kb": 14.68,
+          "error": null
+        },
+        {
+          "name": "save_water_assessment \u2013 single insert",
+          "iterations": 10,
+          "min_ms": 1.6842,
+          "max_ms": 1.9617,
+          "mean_ms": 1.8182,
+          "median_ms": 1.7887,
+          "stdev_ms": 0.0995,
+          "peak_memory_kb": 1.32,
+          "error": null
+        },
+        {
+          "name": "get_water_assessments \u2013 11 rows",
+          "iterations": 10,
+          "min_ms": 0.4568,
+          "max_ms": 0.5219,
+          "mean_ms": 0.4988,
+          "median_ms": 0.4988,
+          "stdev_ms": 0.0219,
+          "peak_memory_kb": 11.66,
+          "error": null
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_benchmarks": 35,
+    "total_errors": 0,
+    "slowest": {
+      "name": "verify_user \u2013 bcrypt check",
+      "mean_ms": 290.8687
+    }
+  }
+}

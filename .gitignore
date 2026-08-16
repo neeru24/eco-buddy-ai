@@ -9,3 +9,6 @@ venv/
 
 .agent/
 AGENTS.md
+
+# Benchmark generated output (keep framework, not run artifacts)
+benchmark_results/

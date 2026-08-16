@@ -1,34 +1,65 @@
 ---
-name: 🐞 Bug Report
-about: Report a problem or unexpected behavior
+name: 🐛 Bug Report
+about: Report a bug to help us improve the project
 title: "[Bug]: "
 labels: bug
-assignees: ''
+assignees: ""
 ---
 
-## 🐛 Describe the Bug
-A clear and concise description of what the bug is.
+# 🐛 Bug Report
 
-## 🔁 Steps to Reproduce
-Steps to reproduce the behavior:
+Thank you for taking the time to report an issue! Please fill out the details below to help us investigate and resolve it quickly.
+
+---
+
+## 📝 Description
+
+Provide a clear and concise description of the bug.
+
+---
+
+## ⚠️ Current Behavior
+
+Describe what is happening now.
+
+Example:
+- The application crashes when clicking the Login button.
+- The page loads indefinitely.
+
+---
+
+## ✅ Expected Behavior
+
+Describe what you expected to happen instead.
+
+---
+
+## 🔄 Steps to Reproduce
+
 1. Go to '...'
 2. Click on '...'
 3. Scroll down to '...'
-4. See error
+4. Observe the issue.
 
-## ✅ Expected Behavior
-What you expected to happen.
+---
 
-## ❌ Actual Behavior
-What actually happened.
+## 📸 Screenshots / Screen Recording
 
-## 📸 Screenshots (if applicable)
-Add screenshots or screen recordings to help explain your problem.
+If applicable, add screenshots or screen recordings to help explain the problem.
 
-## 🖥️ Environment
-- OS: [e.g. Windows, macOS, Linux]
-- Browser: [e.g. Chrome, Firefox]
-- Device: [Desktop / Mobile]
+---
 
-## 📌 Additional Context
-Add any other context about the problem here.
+## 💻 Environment
+
+**Device:**
+- OS:
+- Browser:
+- Version:
+
+---
+
+## 📎 Additional Context
+
+Add any other information, logs, links, or details that may help maintainers understand and resolve the issue.
+
+---

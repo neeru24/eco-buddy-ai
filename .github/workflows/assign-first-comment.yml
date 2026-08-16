@@ -1,0 +1,111 @@
+name: Assign First Commenter
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  assign-first-commenter:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Assign first eligible commenter
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            const issue = context.payload.issue;
+            const commenter = context.payload.comment.user.login;
+
+            // Only for issues opened by neeru24
+            if (issue.user.login !== "neeru24") {
+              console.log("Issue not created by neeru24.");
+              return;
+            }
+
+            // Ignore maintainer comments
+            if (commenter === "neeru24") {
+              console.log("Ignoring maintainer comment.");
+              return;
+            }
+
+            // Ignore if already assigned
+            if (issue.assignees && issue.assignees.length > 0) {
+              console.log("Issue already assigned.");
+              return;
+            }
+
+            // Allow assignment only within 24 hours of issue creation
+            const createdAt = new Date(issue.created_at);
+            const now = new Date();
+            const diffHours = (now - createdAt) / (1000 * 60 * 60);
+
+            if (diffHours > 24) {
+              console.log("Assignment window expired.");
+              return;
+            }
+
+            // Fetch all comments
+            const { data: comments } = await github.rest.issues.listComments({
+              owner,
+              repo,
+              issue_number: issue.number,
+              per_page: 100
+            });
+
+            // Find the first eligible commenter
+            let firstEligible = null;
+
+            for (const c of comments) {
+              const user = c.user.login;
+
+              if (user === "neeru24") continue;
+              if (c.body.startsWith("🎉")) continue;
+
+              firstEligible = user;
+              break;
+            }
+
+            // Current commenter isn't the first eligible commenter
+            if (commenter !== firstEligible) {
+              console.log("Not the first eligible commenter.");
+              return;
+            }
+
+            // Check number of open assigned issues
+            const { data: assignedIssues } = await github.rest.search.issuesAndPullRequests({
+              q: `repo:${owner}/${repo} is:issue is:open assignee:${commenter}`
+            });
+
+            if (assignedIssues.total_count >= 5) {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: issue.number,
+                body: `⚠️ @${commenter}, you already have **5 open assigned issues**.\n\nPlease complete one before claiming another. Contributors may work on a maximum of **5 issues at a time**. 🚀`
+              });
+              return;
+            }
+
+            // Assign issue
+            await github.rest.issues.addAssignees({
+              owner,
+              repo,
+              issue_number: issue.number,
+              assignees: [commenter]
+            });
+
+            // Confirmation comment
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: issue.number,
+              body: `🎉 @${commenter} has been assigned this issue as the **first eligible commenter**!\n\n⏳ Please submit a working PR within **2 days (48 hours)** to keep your assignment active. Happy contributing! 🚀`
+            });

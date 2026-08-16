@@ -912,17 +912,29 @@ if analyze_btn:
 
     st.markdown("---")
 
-    # -------------------------
-    # PDF DOWNLOAD
-    # -------------------------
+# -------------------------
+# PDF DOWNLOAD
+# -------------------------
+
+try:
     report = generate_pdf(total, eco_score, insight)
 
-    with open(report, "rb") as f:
-        st.download_button(
-            "📄 Download Eco Report (PDF)",
-            f,
-            file_name="EcoBuddy_Report.pdf"
-        )
+    if report:
+        with open(report, "rb") as f:
+            st.download_button(
+                "📄 Download Eco Report (PDF)",
+                f,
+                file_name="EcoBuddy_Report.pdf",
+                mime="application/pdf"
+            )
+    else:
+        st.error("⚠️ PDF could not be generated. Please try again.")
+
+except Exception:
+    st.error(
+        "⚠️ Unable to generate the PDF right now. "
+        "Please try again later."
+    )
 
 
 # -------------------------

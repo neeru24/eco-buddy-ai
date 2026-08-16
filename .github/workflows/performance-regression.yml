@@ -1,0 +1,45 @@
+name: CI Performance Regression Testing
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run benchmark suite
+        run: python3 -m benchmarks.benchmark_runner --iterations 10 --output-dir benchmark_results --format json
+
+      - name: Compare against baseline
+        run: |
+          latest=$(ls -t benchmark_results/*.json 2>/dev/null | head -n 1)
+          if [ -z "$latest" ]; then
+            echo "No benchmark report found — skipping comparison."
+            exit 0
+          fi
+          if [ ! -f benchmarks/baseline_report.json ]; then
+            echo "No baseline report found — using current results as baseline."
+            cp "$latest" benchmarks/baseline_report.json
+            exit 0
+          fi
+          python3 -m benchmarks.compare_benchmarks "$latest" benchmarks/baseline_report.json --threshold 20
+
+      - name: Upload benchmark report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-report
+          path: benchmark_results/

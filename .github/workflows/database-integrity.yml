@@ -1,0 +1,36 @@
+name: Database Integrity Tests
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  database-integrity:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install test dependency
+        run: python -m pip install pytest
+
+      - name: Compile integrity checker
+        run: |
+          python -m py_compile \
+            database_integrity.py \
+            scripts/check_database.py \
+            test_database_integrity.py
+
+      - name: Run database integrity tests
+        run: python -m pytest test_database_integrity.py -v

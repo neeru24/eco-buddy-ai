@@ -1,0 +1,82 @@
+name: Auto Assign Issue to First Eligible Commenter
+
+on:
+  issues:
+    types: [opened]
+  issue_comment:
+    types: [created]
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  auto-assign:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Auto assign issue
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            let issue;
+            let candidate;
+
+            // New issue opened
+            if (context.eventName === "issues") {
+              issue = context.payload.issue;
+              candidate = issue.user.login;
+            }
+
+            // Someone commented
+            if (context.eventName === "issue_comment") {
+              issue = context.payload.issue;
+              candidate = context.payload.comment.user.login;
+
+              // Skip if already assigned
+              if (issue.assignees.length > 0) {
+                console.log("Issue already assigned.");
+                return;
+              }
+            }
+
+            // Skip maintainer
+            if (candidate === "neeru24") {
+              console.log("Maintainer detected. Skipping.");
+              return;
+            }
+
+            // Count assigned issues
+            const { data: search } =
+              await github.rest.search.issuesAndPullRequests({
+                q: `repo:${owner}/${repo} is:issue is:open assignee:${candidate}`
+              });
+
+            if (search.total_count >= 5) {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: issue.number,
+                body: `⚠️ @${candidate}, you already have **5 open assigned issues**.\n\nPlease complete one of your existing issues before taking a new one.`
+              });
+              return;
+            }
+
+            // Assign
+            await github.rest.issues.addAssignees({
+              owner,
+              repo,
+              issue_number: issue.number,
+              assignees: [candidate]
+            });
+
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: issue.number,
+              body: `🎉 Assigned to @${candidate}!\n\n⏳ Please submit a PR within **48 hours** to keep your assignment active.`
+            });

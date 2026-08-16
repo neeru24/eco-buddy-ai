@@ -1,26 +1,138 @@
+"""PDF report generation for EcoBuddy AI."""
+
+from __future__ import annotations
+
+import logging
+from datetime import datetime
 import os
 import tempfile
 import uuid
-import streamlit as st
-from reportlab.platypus import SimpleDocTemplate, Paragraph
-from reportlab.lib.styles import getSampleStyleSheet
 
-def generate_pdf(total, eco_score, insight):
+from report_validation import validate_report_data
+
+
+logger = logging.getLogger(__name__)
+
+
+def generate_pdf(total: float, eco_score: int | float, insight: str) -> str | None:
+    """Generate a PDF only when assessment data passes validation."""
+    validation = validate_report_data(total, eco_score, insight)
+    if not validation.is_valid:
+        logger.warning(
+            "PDF generation blocked by invalid assessment data: %s",
+            "; ".join(validation.errors),
+        )
+        return None
+
+    cleaned = validation.cleaned_data
+
+    from reportlab.lib import colors
+    from reportlab.lib.pagesizes import letter
+    from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+    from reportlab.lib.units import inch
+    from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+
     try:
-        file_name = os.path.join(tempfile.gettempdir(), f"eco_report_{uuid.uuid4().hex}.pdf")
-        doc = SimpleDocTemplate(file_name)
+        file_name = os.path.join(
+            tempfile.gettempdir(),
+            f"eco_report_{uuid.uuid4().hex}.pdf",
+        )
+        doc = SimpleDocTemplate(
+            file_name,
+            pagesize=letter,
+            leftMargin=0.75 * inch,
+            rightMargin=0.75 * inch,
+            topMargin=0.75 * inch,
+            bottomMargin=0.75 * inch,
+        )
         styles = getSampleStyleSheet()
 
-        content = [
-            Paragraph("EcoBuddy AI Report", styles["Title"]),
-            Paragraph(f"Carbon Footprint: {total:.2f} kg CO₂", styles["Normal"]),
-            Paragraph(f"Eco Score: {eco_score}/100", styles["Normal"]),
-            Paragraph("Key Insight:", styles["Heading2"]),
-            Paragraph(insight, styles["Normal"])
+        title_style = ParagraphStyle(
+            "CustomTitle",
+            parent=styles["Title"],
+            fontSize=24,
+            textColor=colors.HexColor("#2E7D32"),
+            spaceAfter=12,
+            alignment=1,
+        )
+        subtitle_style = ParagraphStyle(
+            "Subtitle",
+            parent=styles["Normal"],
+            fontSize=14,
+            textColor=colors.HexColor("#555555"),
+            spaceAfter=30,
+            alignment=1,
+        )
+        section_heading = ParagraphStyle(
+            "SectionHeading",
+            parent=styles["Heading2"],
+            fontSize=14,
+            textColor=colors.HexColor("#2E7D32"),
+            spaceBefore=20,
+            spaceAfter=10,
+        )
+        body_text = ParagraphStyle(
+            "BodyText",
+            parent=styles["Normal"],
+            fontSize=11,
+            leading=16,
+            textColor=colors.black,
+        )
+        footer_style = ParagraphStyle(
+            "Footer",
+            parent=styles["Normal"],
+            fontSize=9,
+            textColor=colors.gray,
+            alignment=1,
+            spaceBefore=30,
+        )
+
+        content = []
+
+        content.append(Paragraph("<b>EcoBuddy AI</b>", title_style))
+        content.append(Paragraph("Sustainability Report", subtitle_style))
+        content.append(Spacer(1, 0.2 * inch))
+
+        content.append(Paragraph("Sustainability Metrics", section_heading))
+
+        data = [
+            ["Carbon Footprint", "Eco Score"],
+            [f"{cleaned['total']:.2f} kg CO₂", f"{cleaned['eco_score']:.0f}/100"],
         ]
+
+        table = Table(data, colWidths=[3 * inch, 3 * inch])
+        table.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#E8F5E9")),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.HexColor("#2E7D32")),
+            ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+            ("FONTSIZE", (0, 0), (-1, 0), 12),
+            ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
+            ("TOPPADDING", (0, 0), (-1, 0), 12),
+            ("BACKGROUND", (0, 1), (-1, 1), colors.white),
+            ("TEXTCOLOR", (0, 1), (-1, 1), colors.black),
+            ("FONTNAME", (0, 1), (-1, 1), "Helvetica"),
+            ("FONTSIZE", (0, 1), (-1, 1), 14),
+            ("BOTTOMPADDING", (0, 1), (-1, 1), 14),
+            ("TOPPADDING", (0, 1), (-1, 1), 14),
+            ("GRID", (0, 0), (-1, -1), 1, colors.HexColor("#C8E6C9")),
+        ]))
+
+        content.append(table)
+        content.append(Spacer(1, 0.4 * inch))
+
+        content.append(Paragraph("Key Insight", section_heading))
+        insight_text = str(cleaned["insight"])
+        content.append(Paragraph(insight_text, body_text))
+
+        content.append(Spacer(1, 0.5 * inch))
+
+        generation_date = datetime.now().strftime("%Y-%m-%d %H:%M")
+        footer_text = f"Generated by EcoBuddy AI on {generation_date}"
+        content.append(Paragraph(footer_text, footer_style))
 
         doc.build(content)
         return file_name
-    except Exception:
-        st.error("Could not generate the PDF report. Please check disk space and permissions, then try again.")
+    except Exception as exc:
+        logger.warning("Could not generate PDF report: %s", exc)
         return None

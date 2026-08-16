@@ -1,10 +1,16 @@
+from config import normalize_diet
+from cache import cached
+from cache_config import TTL_COMPUTED_ANALYTICS, CACHE_CATEGORY_COMPUTED
+
+@cached(category=CACHE_CATEGORY_COMPUTED, ttl=TTL_COMPUTED_ANALYTICS)
 def generate_recommendations(
-    transport,
-    electricity,
-    diet,
-    flights,
-    contributors
-):
+    transport: str,
+    electricity: float,
+    diet: str,
+    flights: int,
+    contributors: dict[str, float]
+) -> tuple[str, list[str]]:
+    diet = normalize_diet(diet)
     recommendations = []
     priority = []
 
@@ -15,6 +21,12 @@ def generate_recommendations(
         f"Your biggest contributor is {highest_category} "
         f"({contributors[highest_category]:.0f} kg CO₂/year)."
     )
+
+    explanation_details = {
+        "highest_category": highest_category,
+        "highest_category_emissions": contributors[highest_category],
+        "category_factors": {}
+    }
 
     # Transport Recommendations
 
@@ -65,7 +77,7 @@ def generate_recommendations(
 
     # Diet Recommendations
 
-    if diet == "Non-Vegetarian":
+    if diet in ("Non-Vegetarian", "Omnivore", "Heavy Meat"):
         priority.append("🥩 Diet")
         recommendations.append(
             "🥗 Try replacing 1–2 meat meals every week with plant-based meals."
@@ -76,7 +88,7 @@ def generate_recommendations(
 
     else:
         recommendations.append(
-            "🥬 Great! A vegetarian diet generally has a lower carbon footprint."
+            "🥬 Great! A vegetarian or vegan diet generally has a lower carbon footprint."
         )
 
     # Flight Recommendations
@@ -115,7 +127,11 @@ def generate_recommendations(
 
     return insight, recommendations
 
-def generate_water_recommendations(contributors, total_daily, diet):
+
+@cached(category=CACHE_CATEGORY_COMPUTED, ttl=TTL_COMPUTED_ANALYTICS)
+def generate_water_recommendations(contributors: dict[str, float], total_daily: float,
+                                   diet: str) -> tuple[str, list[str]]:
+    diet = normalize_diet(diet)
     recommendations = []
     
     highest_category = max(contributors, key=contributors.get)

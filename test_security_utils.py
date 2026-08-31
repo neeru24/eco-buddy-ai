@@ -7,10 +7,6 @@ import pytest
 from security_utils import sanitize_html, sanitize_sql, sanitize_user_input
 
 
-# ==============================================================================
-# SECTION 1: Testing HTML Sanitization (XSS Prevention)
-# ==============================================================================
-
 class TestHTMLSanitization:
     def test_script_tag_removed(self):
         """Should escape script tags."""
@@ -45,10 +41,6 @@ class TestHTMLSanitization:
         """Should handle None input."""
         assert sanitize_html(None) == ""
 
-
-# ==============================================================================
-# SECTION 2: Testing SQL Sanitization (Injection Prevention)
-# ==============================================================================
 
 class TestSQLSanitization:
     def test_removes_single_quote(self):
@@ -94,10 +86,6 @@ class TestSQLSanitization:
         assert sanitize_sql(None) == ""
 
 
-# ==============================================================================
-# SECTION 3: Testing Combined Sanitization
-# ==============================================================================
-
 class TestCombinedSanitization:
     def test_removes_script_and_sql(self):
         """Should remove both XSS and SQL injection."""
@@ -122,10 +110,6 @@ class TestCombinedSanitization:
         """Should handle None input."""
         assert sanitize_user_input(None) == ""
 
-
-# ==============================================================================
-# SECTION 4: Testing Advanced Attack Vectors
-# ==============================================================================
 
 class TestAdvancedAttackVectors:
     def test_xss_attempt_with_image_tag(self):
